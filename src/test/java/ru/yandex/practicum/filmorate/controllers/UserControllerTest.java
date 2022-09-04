@@ -121,15 +121,6 @@ public class UserControllerTest {
     }
 
     @Test
-    void tryToUpdateUserWithNegativeIdBadRequest() throws Exception {
-        User user = new User(-1, "email@email.com", "login", "name", BIRTHDAY);
-        String body = objectMapper.writeValueAsString(user);
-        mockMvc.perform(
-                put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void createsAndUpdatesUser() throws Exception {
         User user = new User("email@email.com", "login", "name", BIRTHDAY);
         Mockito.when(userController.createUser(user)).thenReturn(user);

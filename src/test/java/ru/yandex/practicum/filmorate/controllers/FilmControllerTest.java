@@ -112,15 +112,6 @@ public class FilmControllerTest {
     }
 
     @Test
-    void tryToUpdateFilmWithNegativeIdBadRequest() throws Exception {
-        Film film = new Film(-1,"name", RandomString.make(200), TEST_DATE, 1);
-        String body = objectMapper.writeValueAsString(film);
-        mockMvc.perform(
-                put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void createsAndUpdatesFilm() throws Exception {
         Film film = new Film("name", RandomString.make(200), TEST_DATE, 1);
         Mockito.when(filmController.createFilm(film)).thenReturn(film);

@@ -35,7 +35,7 @@ public class UserController {
     public User createUser(@Valid @RequestBody User user) {
         UserValidator.validateUser(user);
         user.setId(id++);
-        if (user.getName() == null || user.getName().isBlank()) {
+        if (user.getName() == null) {
             user.setName(user.getLogin());
         }
         users.put(user.getId(), user);

@@ -12,16 +12,11 @@ public final class UserValidator {
 
     public static void validateUser(User user) {
 
-        if (user.getEmail() == null) {
+        if (user.getEmail() == null ||
+                !user.getEmail().matches("^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$")) {
             throw new ValidationException("Invalid email address");
         }
-        if (!user.getEmail().matches("^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$")) {
-            throw new ValidationException("Invalid email address");
-        }
-        if (user.getLogin() == null) {
-            throw new ValidationException("Invalid login");
-        }
-        if (user.getLogin().split(" ").length > 1 || user.getLogin().isBlank()) {
+        if (user.getLogin() == null || user.getLogin().split(" ").length > 1 || user.getLogin().isBlank()) {
             throw new ValidationException("Invalid login");
         }
         if (user.getBirthday() == null) {

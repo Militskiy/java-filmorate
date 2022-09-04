@@ -11,10 +11,10 @@ public final class FilmValidator {
     }
 
     public static void validateFilm(Film film) {
-        if (film.getName().isBlank()) {
+        if (film.getName() == null || film.getName().isBlank()) {
             throw new ValidationException("Film name cannot be empty");
         }
-        if (film.getDescription().length() > 200) {
+        if (film.getDescription() != null && film.getDescription().length() > 200) {
             throw new ValidationException("Film description cannot be longer then 200 symbols");
         }
         if (film.getReleaseDate() == null) {

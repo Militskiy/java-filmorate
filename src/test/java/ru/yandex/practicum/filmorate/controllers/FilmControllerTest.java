@@ -29,7 +29,7 @@ class FilmControllerTest {
     @Test
     void findAllFilms() {
         filmController.createFilm(film);
-        filmController.createFilm(new Film("name", "description", TEST_DATE, 1));
+        filmController.createFilm(new Film("name", null, TEST_DATE, 1));
         filmController.createFilm(new Film("name", "description", TEST_DATE, 1));
         assertEquals(3, filmController.findAllFilms().size());
     }

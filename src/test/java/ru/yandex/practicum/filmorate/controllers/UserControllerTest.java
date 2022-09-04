@@ -1,82 +1,143 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class UserControllerTest {
+@WebMvcTest(UserController.class)
+public class UserControllerTest {
 
-    static User user;
     private final static LocalDate BIRTHDAY = LocalDate.now().minusDays(1);
-    UserController userController;
 
-    @BeforeAll
-    static void beforeAll() {
-        user = new User("test@test.com", "test", "Alex", BIRTHDAY);
-    }
+    @Autowired
+    private MockMvc mockMvc;
 
-    @BeforeEach
-    void setUp() {
-        userController = new UserController();
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @SpyBean
+    private UserController userController;
+
+    @Test
+    void shouldFindAllUsers() throws Exception {
+        User user1 = new User("test@test.com", "test", "", BIRTHDAY);
+        User user2 = new User("test@test.com", "test", null, BIRTHDAY);
+        User user3 = new User("test@test.com", "test", " ", BIRTHDAY);
+        User user4 = new User("test@test.com", "test", "name", BIRTHDAY);
+
+        String body = objectMapper.writeValueAsString(List.of(user1, user2, user3, user4));
+        Mockito.when(userController.findAllUsers()).thenReturn(List.of(user1, user2, user3, user4));
+        mockMvc.perform(
+                        get("/users"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(body));
     }
 
     @Test
-    void findAllUsers() {
-        userController.createUser(user);
-        userController.createUser(new User("test@test.com", "test", "Alex", BIRTHDAY));
-        userController.createUser(new User("test@test.com", "test", "Alex", BIRTHDAY));
-        userController.updateUser(new User(1, "test@test.com", "updatedLogin", "Alex", BIRTHDAY));
-        assertEquals(3, userController.findAllUsers().size());
+    void tryToCreateUserWithNullEmailBadRequest() throws Exception {
+        User user = new User(null, "login", "name", BIRTHDAY);
+        String body = objectMapper.writeValueAsString(user);
+        mockMvc.perform(
+                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void throwsValidationExceptionInvalidEmail() {
-        User invalidEmailUser = new User("это-неправильный?эмейл@", "test", "Alex", BIRTHDAY);
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> userController.createUser(invalidEmailUser));
-        assertEquals("Invalid email address", ex.getMessage());
-
-        User nullEmailUser = new User(null, "test", "Alex", BIRTHDAY);
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> userController.createUser(nullEmailUser));
-        assertEquals("Invalid email address", exception.getMessage());
+    void tryToCreateUserWithInvalidEmailBadRequest() throws Exception {
+        User user = new User("это-неправильный?эмейл@", "login", "name", BIRTHDAY);
+        String body = objectMapper.writeValueAsString(user);
+        mockMvc.perform(
+                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void throwsValidationExceptionInvalidLogin() {
-        User nullLoginUser = new User("test@test.com", null, "Alex", BIRTHDAY);
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> userController.createUser(nullLoginUser));
-        assertEquals("Invalid login", ex.getMessage());
-
-        User invalidLoginUser = new User("test@test.com", " ", "Alex", BIRTHDAY);
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> userController.createUser(invalidLoginUser));
-        assertEquals("Invalid login", exception.getMessage());
-
-        User spacesInLoginUser = new User("test@test.com", "test test test", "Alex", BIRTHDAY);
-        ValidationException e = assertThrows(ValidationException.class,
-                () -> userController.createUser(spacesInLoginUser));
-        assertEquals("Invalid login", e.getMessage());
+    void tryToCreateUserWithNullLoginBadRequest() throws Exception {
+        User user = new User("email@email.com", null, "name", BIRTHDAY);
+        String body = objectMapper.writeValueAsString(user);
+        mockMvc.perform(
+                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void throwsValidationExceptionInvalidBirthdate() {
-        User nullBirthdateUser = new User("test@test.com", "test", "Alex", null);
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> userController.createUser(nullBirthdateUser));
-        assertEquals("Invalid birthday", ex.getMessage());
+    void tryToCreateUserWithEmptyLoginBadRequest() throws Exception {
+        User user = new User("email@email.com", "", "name", BIRTHDAY);
+        String body = objectMapper.writeValueAsString(user);
+        mockMvc.perform(
+                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
 
-        User futureBirthdateUser =
-                new User("test@test.com", "test", "Alex", LocalDate.now().plusDays(1));
-        ValidationException e = assertThrows(ValidationException.class,
-                () -> userController.createUser(futureBirthdateUser));
-        assertEquals("Birthday must be in the past", e.getMessage());
+    @Test
+    void tryToCreateUserWithBlankLoginBadRequest() throws Exception {
+        User user = new User("email@email.com", " ", "name", BIRTHDAY);
+        String body = objectMapper.writeValueAsString(user);
+        mockMvc.perform(
+                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void tryToCreateUserWithNullBirthdayBadRequest() throws Exception {
+        User user = new User("email@email.com", "login", "name", null);
+        String body = objectMapper.writeValueAsString(user);
+        mockMvc.perform(
+                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void tryToCreateUserWithFutureBirthdayBadRequest() throws Exception {
+        User user = new User("email@email.com", "login", "name", BIRTHDAY.plusDays(2));
+        String body = objectMapper.writeValueAsString(user);
+        mockMvc.perform(
+                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void tryToUpdateUserWithWrongIdNotFound() throws Exception {
+        User user = new User(10, "email@email.com", "login", "name", BIRTHDAY);
+        String body = objectMapper.writeValueAsString(user);
+        mockMvc.perform(
+                put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void tryToUpdateUserWithNegativeIdBadRequest() throws Exception {
+        User user = new User(-1, "email@email.com", "login", "name", BIRTHDAY);
+        String body = objectMapper.writeValueAsString(user);
+        mockMvc.perform(
+                put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createsAndUpdatesUser() throws Exception {
+        User user = new User("email@email.com", "login", "name", BIRTHDAY);
+        Mockito.when(userController.createUser(user)).thenReturn(user);
+        User updatedUser = new User(user.getId(), "updated@updated.com", "login", "name", BIRTHDAY);
+        String body = objectMapper.writeValueAsString(updatedUser);
+        mockMvc.perform(
+                put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(body));
     }
 }

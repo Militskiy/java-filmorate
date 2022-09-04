@@ -1,94 +1,134 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.utils.FilmValidator;
 
 import java.time.LocalDate;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class FilmControllerTest {
-    static Film film;
+
+@WebMvcTest(FilmController.class)
+public class FilmControllerTest {
+
     private static final LocalDate TEST_DATE = LocalDate.of(1895, 12, 28);
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @SpyBean
     FilmController filmController;
 
-    @BeforeAll
-    static void beforeAll() {
-        film = new Film("name", "description", TEST_DATE, 1);
-    }
-
-    @BeforeEach
-    void setUp() {
-        filmController = new FilmController();
-    }
-
     @Test
-    void findAllFilms() {
-        filmController.createFilm(film);
-        filmController.createFilm(new Film("name", null, TEST_DATE, 1));
-        filmController.createFilm(new Film("name", "description", TEST_DATE, 1));
-        assertEquals(3, filmController.findAllFilms().size());
+    void shouldFindAllFilms() throws Exception {
+        Film film1 = new Film("name", RandomString.make(200), TEST_DATE, 1);
+        Film film2 = new Film("name", null, TEST_DATE, 1);
+        Film film3 = new Film("name", "", TEST_DATE, 1);
+        String body = objectMapper.writeValueAsString(List.of(film1, film2, film3));
+        Mockito.when(filmController.findAllFilms()).thenReturn(List.of(film1, film2, film3));
+        mockMvc.perform(
+                get("/films"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(body));
     }
 
     @Test
-    void throwsValidationErrorEmptyFilmName() {
-        final Film emptyNameFilm = new Film(" ", "description", TEST_DATE, 100);
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> FilmValidator.validateFilm(emptyNameFilm));
-        assertEquals("Film name cannot be empty", ex.getMessage());
+    void tryToCreateFilmWithEmptyNameBadRequest() throws Exception {
+        Film film = new Film("", RandomString.make(200), TEST_DATE, 1);
+        String body = objectMapper.writeValueAsString(film);
+        mockMvc.perform(
+                post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void throwsValidationErrorEarlyDate() {
-        final Film earlyDateFilm = new Film("name", "description", TEST_DATE.minusDays(1), 100);
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> FilmValidator.validateFilm(earlyDateFilm));
-        assertEquals("Film release date is before 28.12.1985", ex.getMessage());
-    }
-    @Test
-    void throwsValidationErrorFutureDate() {
-        final Film futureDateFilm = new Film("name", "description", LocalDate.now().plusDays(1), 100);
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> FilmValidator.validateFilm(futureDateFilm));
-        assertEquals("Film release date must be in the past", ex.getMessage());
+    void tryToCreateFilmWithEarlyDateBadRequest() throws Exception {
+        Film film = new Film("name", RandomString.make(200), TEST_DATE.minusDays(1), 1);
+        String body = objectMapper.writeValueAsString(film);
+        mockMvc.perform(
+                post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void throwsValidationErrorNullDate() {
-        final Film nullDateFilm = new Film("name", "description", null, 100);
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> FilmValidator.validateFilm(nullDateFilm));
-        assertEquals("Film release date cannot be null", ex.getMessage());
+    void tryToCreateFilmWithFutureDateBadRequest() throws Exception {
+        Film film = new Film("name", RandomString.make(200), LocalDate.now().plusDays(1), 1);
+        String body = objectMapper.writeValueAsString(film);
+        mockMvc.perform(
+                post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void throwsValidationErrorNotPositiveDuration() {
-        final Film futureDateFilm = new Film("name", "description", TEST_DATE, 0);
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> FilmValidator.validateFilm(futureDateFilm));
-        assertEquals("Film duration must be positive", ex.getMessage());
+    void tryToCreateFilmWithNullDateBadRequest() throws Exception {
+        Film film = new Film("name", RandomString.make(200), null, 1);
+        String body = objectMapper.writeValueAsString(film);
+        mockMvc.perform(
+                post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void throwsValidationErrorLongDescription() {
-        String description = "1".repeat(201);
-        final Film longDescriptionName = new Film("name", description, TEST_DATE, 100);
-        ValidationException ex = assertThrows(ValidationException.class,
-                () -> FilmValidator.validateFilm(longDescriptionName));
-        assertEquals("Film description cannot be longer then 200 symbols", ex.getMessage());
+    void tryToCreateFilmWithLongDescriptionBadRequest() throws Exception {
+        Film film = new Film("name", RandomString.make(201), TEST_DATE, 1);
+        String body = objectMapper.writeValueAsString(film);
+        mockMvc.perform(
+                post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void updatesFilm() {
-        filmController.createFilm(film);
-        assertEquals(1, filmController.findAllFilms().size());
-        final Film updatedFilm = new Film(1, "name", "updated_description", TEST_DATE, 120);
-        filmController.updateFilm(updatedFilm);
-        assertEquals(1, filmController.findAllFilms().size());
-        assertEquals(updatedFilm, filmController.findAllFilms().get(0));
+    void tryToCreateFilmWithNegativeDurationBadRequest() throws Exception {
+        Film film = new Film("name", RandomString.make(200), TEST_DATE, -1);
+        String body = objectMapper.writeValueAsString(film);
+        mockMvc.perform(
+                post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void tryToUpdateFilmWithWrongIdNotFound() throws Exception {
+        Film film = new Film(10,"name", RandomString.make(200), TEST_DATE, 1);
+        String body = objectMapper.writeValueAsString(film);
+        mockMvc.perform(
+                put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void tryToUpdateFilmWithNegativeIdBadRequest() throws Exception {
+        Film film = new Film(-1,"name", RandomString.make(200), TEST_DATE, 1);
+        String body = objectMapper.writeValueAsString(film);
+        mockMvc.perform(
+                put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createsAndUpdatesFilm() throws Exception {
+        Film film = new Film("name", RandomString.make(200), TEST_DATE, 1);
+        Mockito.when(filmController.createFilm(film)).thenReturn(film);
+        Film updatedFilm = new Film(film.getId(), "updated", RandomString.make(1), TEST_DATE, 2);
+        String body = objectMapper.writeValueAsString(updatedFilm);
+        mockMvc.perform(put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(body));
     }
 }
+

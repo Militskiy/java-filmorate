@@ -114,7 +114,7 @@ public class FilmControllerTest {
     @Test
     void createsAndUpdatesFilm() throws Exception {
         Film film = new Film("name", RandomString.make(200), TEST_DATE, 1);
-        Mockito.when(filmController.createFilm(film)).thenReturn(film);
+        filmController.createFilm(film);
         Film updatedFilm = new Film(film.getId(), "updated", RandomString.make(1), TEST_DATE, 2);
         String body = objectMapper.writeValueAsString(updatedFilm);
         mockMvc.perform(put("/films").content(body).contentType(MediaType.APPLICATION_JSON))

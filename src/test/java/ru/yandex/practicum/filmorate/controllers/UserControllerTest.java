@@ -53,7 +53,7 @@ public class UserControllerTest {
         User user = new User(null, "login", "name", BIRTHDAY);
         String body = objectMapper.writeValueAsString(user);
         mockMvc.perform(
-                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                        post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -62,7 +62,7 @@ public class UserControllerTest {
         User user = new User("это-неправильный?эмейл@", "login", "name", BIRTHDAY);
         String body = objectMapper.writeValueAsString(user);
         mockMvc.perform(
-                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                        post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -71,7 +71,7 @@ public class UserControllerTest {
         User user = new User("email@email.com", null, "name", BIRTHDAY);
         String body = objectMapper.writeValueAsString(user);
         mockMvc.perform(
-                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                        post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -80,7 +80,7 @@ public class UserControllerTest {
         User user = new User("email@email.com", "", "name", BIRTHDAY);
         String body = objectMapper.writeValueAsString(user);
         mockMvc.perform(
-                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                        post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -89,7 +89,7 @@ public class UserControllerTest {
         User user = new User("email@email.com", " ", "name", BIRTHDAY);
         String body = objectMapper.writeValueAsString(user);
         mockMvc.perform(
-                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                        post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -98,7 +98,7 @@ public class UserControllerTest {
         User user = new User("email@email.com", "login", "name", null);
         String body = objectMapper.writeValueAsString(user);
         mockMvc.perform(
-                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                        post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -107,7 +107,7 @@ public class UserControllerTest {
         User user = new User("email@email.com", "login", "name", BIRTHDAY.plusDays(2));
         String body = objectMapper.writeValueAsString(user);
         mockMvc.perform(
-                post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                        post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
@@ -116,18 +116,18 @@ public class UserControllerTest {
         User user = new User(10, "email@email.com", "login", "name", BIRTHDAY);
         String body = objectMapper.writeValueAsString(user);
         mockMvc.perform(
-                put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                        put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void createsAndUpdatesUser() throws Exception {
         User user = new User("email@email.com", "login", "name", BIRTHDAY);
-        Mockito.when(userController.createUser(user)).thenReturn(user);
+        userController.createUser(user);
         User updatedUser = new User(user.getId(), "updated@updated.com", "login", "name", BIRTHDAY);
         String body = objectMapper.writeValueAsString(updatedUser);
         mockMvc.perform(
-                put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+                        put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(body));
     }

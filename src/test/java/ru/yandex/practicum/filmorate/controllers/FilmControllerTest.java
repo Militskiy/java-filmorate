@@ -33,7 +33,7 @@ public class FilmControllerTest {
     private ObjectMapper objectMapper;
 
     @SpyBean
-    FilmController filmController;
+    private FilmController filmController;
 
     @Test
     void shouldFindAllFilms() throws Exception {
@@ -42,7 +42,7 @@ public class FilmControllerTest {
         Film film3 = new Film("name", "", TEST_DATE, 1);
         String body = objectMapper.writeValueAsString(List.of(film1, film2, film3));
         Mockito.when(filmController.findAllFilms()).thenReturn(List.of(film1, film2, film3));
-        mockMvc.perform(
+        this.mockMvc.perform(
                 get("/films"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(body));
@@ -52,7 +52,7 @@ public class FilmControllerTest {
     void tryToCreateFilmWithEmptyNameBadRequest() throws Exception {
         Film film = new Film("", RandomString.make(200), TEST_DATE, 1);
         String body = objectMapper.writeValueAsString(film);
-        mockMvc.perform(
+        this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
@@ -61,7 +61,7 @@ public class FilmControllerTest {
     void tryToCreateFilmWithEarlyDateBadRequest() throws Exception {
         Film film = new Film("name", RandomString.make(200), TEST_DATE.minusDays(1), 1);
         String body = objectMapper.writeValueAsString(film);
-        mockMvc.perform(
+        this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
@@ -70,7 +70,7 @@ public class FilmControllerTest {
     void tryToCreateFilmWithFutureDateBadRequest() throws Exception {
         Film film = new Film("name", RandomString.make(200), LocalDate.now().plusDays(1), 1);
         String body = objectMapper.writeValueAsString(film);
-        mockMvc.perform(
+        this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
@@ -79,7 +79,7 @@ public class FilmControllerTest {
     void tryToCreateFilmWithNullDateBadRequest() throws Exception {
         Film film = new Film("name", RandomString.make(200), null, 1);
         String body = objectMapper.writeValueAsString(film);
-        mockMvc.perform(
+        this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
@@ -88,7 +88,7 @@ public class FilmControllerTest {
     void tryToCreateFilmWithLongDescriptionBadRequest() throws Exception {
         Film film = new Film("name", RandomString.make(201), TEST_DATE, 1);
         String body = objectMapper.writeValueAsString(film);
-        mockMvc.perform(
+        this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
@@ -97,7 +97,7 @@ public class FilmControllerTest {
     void tryToCreateFilmWithNegativeDurationBadRequest() throws Exception {
         Film film = new Film("name", RandomString.make(200), TEST_DATE, -1);
         String body = objectMapper.writeValueAsString(film);
-        mockMvc.perform(
+        this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
@@ -106,7 +106,7 @@ public class FilmControllerTest {
     void tryToUpdateFilmWithWrongIdNotFound() throws Exception {
         Film film = new Film(10,"name", RandomString.make(200), TEST_DATE, 1);
         String body = objectMapper.writeValueAsString(film);
-        mockMvc.perform(
+        this.mockMvc.perform(
                 put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -117,7 +117,7 @@ public class FilmControllerTest {
         filmController.createFilm(film);
         Film updatedFilm = new Film(film.getId(), "updated", RandomString.make(1), TEST_DATE, 2);
         String body = objectMapper.writeValueAsString(updatedFilm);
-        mockMvc.perform(put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+        this.mockMvc.perform(put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(body));
     }

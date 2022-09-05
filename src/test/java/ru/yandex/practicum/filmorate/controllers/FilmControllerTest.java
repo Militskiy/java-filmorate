@@ -9,11 +9,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -54,7 +60,9 @@ public class FilmControllerTest {
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException));
     }
 
     @Test
@@ -63,7 +71,10 @@ public class FilmControllerTest {
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
+                .andExpect(result -> assertEquals("Film release date is before 28.12.1985",
+                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 
     @Test
@@ -81,7 +92,9 @@ public class FilmControllerTest {
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException));
     }
 
     @Test
@@ -90,7 +103,9 @@ public class FilmControllerTest {
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException));
     }
 
     @Test
@@ -99,16 +114,22 @@ public class FilmControllerTest {
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException));
     }
 
     @Test
     void tryToUpdateFilmWithWrongIdNotFound() throws Exception {
-        Film film = new Film(10,"name", RandomString.make(200), TEST_DATE, 1);
+        Film film = new Film(10, "name", RandomString.make(200), TEST_DATE, 1);
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
-                put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                        put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException() instanceof NoSuchFilmException))
+                .andExpect(result -> assertEquals("No film with such ID",
+                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 
     @Test

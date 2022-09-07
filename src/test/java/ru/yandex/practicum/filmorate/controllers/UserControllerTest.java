@@ -2,11 +2,10 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
@@ -23,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
@@ -36,22 +36,45 @@ public class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @SpyBean
+    @Autowired
     private UserController userController;
 
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
     void shouldFindAllUsers() throws Exception {
         User user1 = new User("test@test.com", "test", "", BIRTHDAY);
         User user2 = new User("test@test.com", "test", null, BIRTHDAY);
         User user3 = new User("test@test.com", "test", " ", BIRTHDAY);
         User user4 = new User("test@test.com", "test", "name", BIRTHDAY);
-
+        userController.createUser(user1);
+        userController.createUser(user2);
+        userController.createUser(user3);
+        userController.createUser(user4);
         String body = objectMapper.writeValueAsString(List.of(user1, user2, user3, user4));
-        Mockito.when(userController.findAllUsers()).thenReturn(List.of(user1, user2, user3, user4));
         this.mockMvc.perform(
                         get("/users"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(body));
+    }
+
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Test
+    void givenNewUserWithNullName_whenCreated_thenAddsUserWithNameEqualsLogin() throws Exception {
+        //given
+        String body = objectMapper.writeValueAsString(
+                new User("test@test.com", "login", null, BIRTHDAY));
+
+        //when
+        this.mockMvc.perform(
+                        post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
+
+                //then
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.email").value("test@test.com"))
+                .andExpect(jsonPath("$.login").value("login"))
+                .andExpect(jsonPath("$.name").value("login"))
+                .andExpect(jsonPath("$.birthday").value(BIRTHDAY.toString()));
     }
 
     @Test
@@ -86,6 +109,23 @@ public class UserControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(result ->
                         assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException));
+    }
+
+    @Test
+    void givenUserWithSpaceInLogin_whenPosting_thenThrowsValidationException() throws Exception {
+        //given
+        User user = new User("aa@bb.com", "log in", "name", BIRTHDAY);
+        String requestBody = objectMapper.writeValueAsString(user);
+
+        //when
+        this.mockMvc.perform(post("/users")
+                        .content(requestBody)
+                        .contentType(MediaType.APPLICATION_JSON))
+                //then
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
+                .andExpect(result -> assertEquals("Invalid login",
+                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 
     @Test
@@ -145,6 +185,7 @@ public class UserControllerTest {
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
     void createsAndUpdatesUser() throws Exception {
         User user = new User("email@email.com", "login", "name", BIRTHDAY);

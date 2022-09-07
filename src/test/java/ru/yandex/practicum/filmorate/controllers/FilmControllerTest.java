@@ -3,11 +3,11 @@ package ru.yandex.practicum.filmorate.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -39,19 +40,37 @@ public class FilmControllerTest {
     private ObjectMapper objectMapper;
 
     @SpyBean
-    private FilmController filmController;
+    FilmController filmController;
 
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
     void shouldFindAllFilms() throws Exception {
-        Film film1 = new Film("name", RandomString.make(200), TEST_DATE, 1);
+        Film film1 = new Film("name", "1".repeat(200), TEST_DATE, 1);
         Film film2 = new Film("name", null, TEST_DATE, 1);
         Film film3 = new Film("name", "", TEST_DATE, 1);
-        String body = objectMapper.writeValueAsString(List.of(film1, film2, film3));
-        Mockito.when(filmController.findAllFilms()).thenReturn(List.of(film1, film2, film3));
+        filmController.createFilm(film1);
+        filmController.createFilm(film2);
+        filmController.createFilm(film3);
+        String listBody = objectMapper.writeValueAsString(List.of(film1, film2, film3));
         this.mockMvc.perform(
                 get("/films"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(body));
+                .andExpect(content().json(listBody));
+    }
+
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Test
+    void shouldCreateFilm() throws Exception {
+        Film film = new Film("name", "description", TEST_DATE, 1);
+        String body = objectMapper.writeValueAsString(film);
+        this.mockMvc.perform(
+                post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
+        String listBody = objectMapper.writeValueAsString(filmController.findAllFilms());
+        this.mockMvc.perform(
+                get("/films"))
+                .andExpect(content().json(listBody));
     }
 
     @Test
@@ -132,6 +151,7 @@ public class FilmControllerTest {
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
     void createsAndUpdatesFilm() throws Exception {
         Film film = new Film("name", RandomString.make(200), TEST_DATE, 1);

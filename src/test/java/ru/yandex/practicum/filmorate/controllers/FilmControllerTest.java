@@ -4,14 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
@@ -28,7 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@WebMvcTest(FilmController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class FilmControllerTest {
 
     private static final LocalDate TEST_DATE = LocalDate.of(1895, 12, 28);
@@ -91,8 +93,8 @@ public class FilmControllerTest {
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals("Film release date is before 28.12.1985",
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException))
+                .andExpect(result -> assertEquals("Film release date must be after 28.12.1985",
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 

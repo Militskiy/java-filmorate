@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.utils;
 
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -14,16 +14,16 @@ public final class UserValidator {
 
         if (user.getEmail() == null ||
                 !user.getEmail().matches("^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$")) {
-            throw new ValidationException("Invalid email address");
+            throw new BadArgumentsException("Invalid email address");
         }
         if (user.getLogin() == null || user.getLogin().split(" ").length > 1 || user.getLogin().isBlank()) {
-            throw new ValidationException("Invalid login");
+            throw new BadArgumentsException("Invalid login");
         }
         if (user.getBirthday() == null) {
-            throw new ValidationException("Invalid birthday");
+            throw new BadArgumentsException("Invalid birthday");
         }
         if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Birthday must be in the past");
+            throw new BadArgumentsException("Birthday must be in the past");
         }
     }
 }

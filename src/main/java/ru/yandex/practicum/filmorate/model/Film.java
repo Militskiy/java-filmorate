@@ -10,6 +10,8 @@ import javax.validation.constraints.PastOrPresent;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -26,10 +28,20 @@ public class Film {
     @Positive
     private long duration;
 
+    private final Set<Integer> userLikes = new HashSet<>();
+
     public Film(String name, String description, LocalDate releaseDate, long duration) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
+    }
+
+    public boolean addLike(Integer userId) {
+        return !userLikes.add(userId);
+    }
+
+    public boolean removeLike(Integer userId) {
+        return !userLikes.remove(userId);
     }
 }

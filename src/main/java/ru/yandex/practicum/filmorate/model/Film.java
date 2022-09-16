@@ -38,10 +38,10 @@ public class Film {
     }
 
     public boolean addLike(Integer userId) {
-        return !userLikes.add(userId);
+        return userLikes.add(userId);
     }
 
     public boolean removeLike(Integer userId) {
-        return !userLikes.remove(userId);
+        return userLikes.remove(userId);
     }
 }

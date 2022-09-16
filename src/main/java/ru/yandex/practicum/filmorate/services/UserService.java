@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.services;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
@@ -12,17 +12,13 @@ import ru.yandex.practicum.filmorate.utils.UserValidator;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserStorage userStorage;
     private Integer userId = 0;
-
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
 
     public Collection<User> findAllUsers() {
         log.debug("Sending user list");
@@ -42,52 +38,55 @@ public class UserService {
 
     public User updateUser(User user) {
         UserValidator.validateUser(user);
-        if (userStorage.findUserById(user.getId()).isEmpty()) {
+        if (userStorage.findUserById(user.getId()).isPresent()) {
+            userStorage.updateUser(user);
+            log.debug("Edited user with id: {} and name: {}", user.getId(), user.getName());
+            return user;
+        } else {
             throw new NoSuchUserException("No user with such ID");
         }
-        userStorage.updateUser(user);
-        log.debug("Edited user with id: {} and name: {}", user.getId(), user.getName());
-        return user;
     }
 
     public User addFriends(Integer userId, Integer friendId) {
-        if (userStorage.findUserById(userId).isEmpty()) {
+        if (userStorage.findUserById(userId).isPresent()) {
+            if (userStorage.findUserById(friendId).isPresent()) {
+                if (userStorage.findUserById(friendId).get().addFriend(userId)) {
+                    if (userStorage.findUserById(userId).get().addFriend(friendId)) {
+                        log.debug("Users {} and {} are now friends",
+                                userStorage.findUserById(userId).get().getName(),
+                                userStorage.findUserById(friendId).get().getName());
+                        return userStorage.findUserById(userId).get();
+                    } else {
+                        throw new BadArgumentsException("Users are already friends");
+                    }
+                } else {
+                    throw new BadArgumentsException("Users are already friends");
+                }
+            } else {
+                throw new NoSuchUserException("No friend with such ID");
+            }
+        } else {
             throw new NoSuchUserException("No user with such ID");
         }
-
-        if (userStorage.findUserById(friendId).isEmpty()) {
-            throw new NoSuchUserException("No friend with such ID");
-        }
-        if (userStorage.findUserById(friendId).get().addFriend(userId)) {
-            throw new BadArgumentsException("Users are already friends");
-        }
-        if (userStorage.findUserById(userId).get().addFriend(friendId)) {
-            throw new BadArgumentsException("Users are already friends");
-        }
-        log.debug("Users {} and {} are now friends",
-                userStorage.findUserById(userId).get().getName(),
-                userStorage.findUserById(friendId).get().getName());
-        return userStorage.findUserById(userId).get();
     }
 
     public User deleteFriends(Integer userId, Integer friendId) {
-        if (userStorage.findUserById(userId).isEmpty()) {
+        if (userStorage.findUserById(userId).isPresent()) {
+            if (userStorage.findUserById(friendId).isPresent()) {
+                if (userStorage.findUserById(friendId).get().deleteFriend(userId)) {
+                    log.debug("Users {} and {} are no longer friends",
+                            userStorage.findUserById(userId).get().getName(),
+                            userStorage.findUserById(friendId).get().getName());
+                    return userStorage.findUserById(userId).get();
+                } else {
+                    throw new BadArgumentsException("Users are not friends");
+                }
+            } else {
+                throw new NoSuchUserException("No friend with such ID");
+            }
+        } else {
             throw new NoSuchUserException("No user with such ID");
         }
-
-        if (userStorage.findUserById(friendId).isEmpty()) {
-            throw new NoSuchUserException("No friend with such ID");
-        }
-        if (userStorage.findUserById(friendId).get().deleteFriend(userId)) {
-            throw new BadArgumentsException("Users are not friends");
-        }
-        if (userStorage.findUserById(userId).get().deleteFriend(friendId)) {
-            throw new BadArgumentsException("Users are not friends");
-        }
-        log.debug("Users {} and {} are no longer friends",
-                userStorage.findUserById(userId).get().getName(),
-                userStorage.findUserById(friendId).get().getName());
-        return userStorage.findUserById(userId).get();
     }
 
     public Collection<User> findFriends(Integer userId) {

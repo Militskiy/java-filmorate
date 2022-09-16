@@ -38,10 +38,10 @@ public class User {
     }
 
     public boolean addFriend(Integer id) {
-        return !friends.add(id);
+        return friends.add(id);
     }
 
     public boolean deleteFriend(Integer id) {
-        return !friends.remove(id);
+        return friends.remove(id);
     }
 }

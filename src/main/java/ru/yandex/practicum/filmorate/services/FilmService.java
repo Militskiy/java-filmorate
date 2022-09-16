@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.services;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
@@ -16,17 +16,12 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private Integer filmId = 0;
-
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
 
     public Collection<Film> findAllFilms() {
         log.debug("Listing all films");
@@ -43,46 +38,53 @@ public class FilmService {
 
     public Film updateFilm(Film film) {
         FilmValidator.validateFilm(film);
-        if (filmStorage.findFilmById(film.getId()).isEmpty()) {
+        if (filmStorage.findFilmById(film.getId()).isPresent()) {
+            filmStorage.updateFilm(film);
+            log.debug("Updated film with ID: {}", film.getId());
+            return film;
+        } else {
             throw new NoSuchFilmException("No film with such ID");
         }
-        filmStorage.updateFilm(film);
-        log.debug("Updated film with ID: {}", film.getId());
-        return film;
     }
 
     public Integer addLike(Integer filmId, Integer userId) {
-        if (filmStorage.findFilmById(filmId).isEmpty()) {
+        if (filmStorage.findFilmById(filmId).isPresent()) {
+            if (userStorage.findUserById(userId).isPresent()) {
+                if (filmStorage.findFilmById(filmId).get().addLike(userId)) {
+                    log.debug("User: {} liked Film: {}, total likes now: {}",
+                            userStorage.findUserById(userId).get().getName(),
+                            filmStorage.findFilmById(filmId).get().getName(),
+                            filmStorage.findFilmById(filmId).get().getUserLikes().size());
+                    return filmStorage.findFilmById(filmId).get().getUserLikes().size();
+                } else {
+                    throw new BadArgumentsException("Film already liked");
+                }
+            } else {
+                throw new NoSuchUserException("No user with such ID");
+            }
+        } else {
             throw new NoSuchFilmException("No film with such ID");
         }
-        if (userStorage.findUserById(userId).isEmpty()) {
-            throw new NoSuchUserException("No user with such ID");
-        }
-        if (filmStorage.findFilmById(filmId).get().addLike(userId)) {
-            throw new BadArgumentsException("Film already liked");
-        }
-        log.debug("User: {} liked Film: {}, total likes now: {}",
-                userStorage.findUserById(userId).get().getName(),
-                filmStorage.findFilmById(filmId).get().getName(),
-                filmStorage.findFilmById(filmId).get().getUserLikes().size());
-        return filmStorage.findFilmById(filmId).get().getUserLikes().size();
     }
 
     public Integer removeLike(Integer filmId, Integer userId) {
-        if (filmStorage.findFilmById(filmId).isEmpty()) {
+        if (filmStorage.findFilmById(filmId).isPresent()) {
+            if (userStorage.findUserById(userId).isPresent()) {
+                if (filmStorage.findFilmById(filmId).get().removeLike(userId)) {
+                    log.debug("User: {} removed like from Film: {}, total likes now: {}",
+                            userStorage.findUserById(userId).get().getName(),
+                            filmStorage.findFilmById(filmId).get().getName(),
+                            filmStorage.findFilmById(filmId).get().getUserLikes().size());
+                    return filmStorage.findFilmById(filmId).get().getUserLikes().size();
+                } else {
+                    throw new BadArgumentsException("Cannot remove like, film is not liked");
+                }
+            } else {
+                throw new NoSuchUserException("No user with such ID");
+            }
+        } else {
             throw new NoSuchFilmException("No film with such ID");
         }
-        if (userStorage.findUserById(userId).isEmpty()) {
-            throw new NoSuchUserException("No user with such ID");
-        }
-        if (filmStorage.findFilmById(filmId).orElseThrow().removeLike(userId)) {
-            throw new BadArgumentsException("Filmed not liked");
-        }
-        log.debug("User: {} removed liked from Film: {}, total likes now: {}",
-                userStorage.findUserById(userId).get().getName(),
-                filmStorage.findFilmById(filmId).get().getName(),
-                filmStorage.findFilmById(filmId).get().getUserLikes().size());
-        return filmStorage.findFilmById(filmId).get().getUserLikes().size();
     }
 
     public Collection<Film> findPopularFilms(Integer count) {

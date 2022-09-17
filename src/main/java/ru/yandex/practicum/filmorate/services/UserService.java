@@ -50,15 +50,12 @@ public class UserService {
     public User addFriends(Integer userId, Integer friendId) {
         if (userStorage.findUserById(userId).isPresent()) {
             if (userStorage.findUserById(friendId).isPresent()) {
-                if (userStorage.findUserById(friendId).get().addFriend(userId)) {
-                    if (userStorage.findUserById(userId).get().addFriend(friendId)) {
-                        log.debug("Users {} and {} are now friends",
-                                userStorage.findUserById(userId).get().getName(),
-                                userStorage.findUserById(friendId).get().getName());
-                        return userStorage.findUserById(userId).get();
-                    } else {
-                        throw new BadArgumentsException("Users are already friends");
-                    }
+                if (userStorage.findUserById(friendId).get().addFriend(userId) &&
+                        userStorage.findUserById(userId).get().addFriend(friendId)) {
+                    log.debug("Users {} and {} are now friends",
+                            userStorage.findUserById(userId).get().getName(),
+                            userStorage.findUserById(friendId).get().getName());
+                    return userStorage.findUserById(userId).get();
                 } else {
                     throw new BadArgumentsException("Users are already friends");
                 }
@@ -73,7 +70,8 @@ public class UserService {
     public User deleteFriends(Integer userId, Integer friendId) {
         if (userStorage.findUserById(userId).isPresent()) {
             if (userStorage.findUserById(friendId).isPresent()) {
-                if (userStorage.findUserById(friendId).get().deleteFriend(userId)) {
+                if (userStorage.findUserById(userId).get().deleteFriend(friendId) &&
+                        userStorage.findUserById(friendId).get().deleteFriend(userId)) {
                     log.debug("Users {} and {} are no longer friends",
                             userStorage.findUserById(userId).get().getName(),
                             userStorage.findUserById(friendId).get().getName());

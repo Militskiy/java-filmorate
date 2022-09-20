@@ -33,7 +33,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public User findUser(@PathVariable @Min(1) Integer id) {
-        return userService.findUser(id);
+        return userService.findUserById(id);
     }
 
     @GetMapping("/{id}/friends")

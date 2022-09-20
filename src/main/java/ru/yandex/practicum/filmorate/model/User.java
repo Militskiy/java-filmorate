@@ -8,6 +8,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
+import javax.validation.constraints.Pattern;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,11 +22,12 @@ public class User {
     private int id;
     @Email
     private String email;
-    @NotBlank
+    @NotBlank(message = "Invalid login")
+    @Pattern(regexp = "^\\S*$", message = "Invalid login")
     private String login;
     private String name;
-    @NotNull
-    @Past
+    @NotNull(message = "Birthday cannot be null")
+    @Past(message = "Birthday must be in the past")
     private LocalDate birthday;
 
     private final Set<Integer> friends = new HashSet<>();

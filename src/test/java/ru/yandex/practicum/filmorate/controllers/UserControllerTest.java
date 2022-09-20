@@ -126,9 +126,8 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 //then
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException))
-                .andExpect(result -> assertEquals("Invalid login",
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException));
     }
 
     @Test

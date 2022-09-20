@@ -11,6 +11,8 @@ import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.model.ErrorResponse;
 
+import java.util.Objects;
+
 @RestControllerAdvice
 @Slf4j
 public class ErrorHandler {
@@ -46,9 +48,11 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
-        log.debug(String.format("Validation failed for request body: %s", e.getParameter().getParameterName()));
+        log.debug(String.format("Validation failed for request body: %s",
+                Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage()));
         return new ErrorResponse(
-                String.format("Validation failed for request body: %s", e.getParameter().getParameterName())
+                String.format("Validation failed for request body: %s",
+                        Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage())
         );
     }
 }

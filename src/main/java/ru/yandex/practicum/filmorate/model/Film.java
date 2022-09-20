@@ -18,14 +18,14 @@ import java.util.Set;
 @NoArgsConstructor
 public class Film {
     private int id;
-    @NotBlank
+    @NotBlank(message = "Name must not be blank")
     private String name;
-    @Size(max = 200)
+    @Size(max = 200, message = "Description size must be under 200 symbols")
     private String description;
-    @NotNull
-    @PastOrPresent
+    @NotNull(message = "Release date must not be null")
+    @PastOrPresent(message = "Release date cannot be in the future")
     private LocalDate releaseDate;
-    @Positive
+    @Positive(message = "Duration must be positive")
     private long duration;
 
     private final Set<Integer> userLikes = new HashSet<>();

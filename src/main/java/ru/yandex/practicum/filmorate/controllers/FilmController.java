@@ -33,7 +33,7 @@ public class FilmController {
 
     @GetMapping("/{id}")
     public Film findFilm(@PathVariable @Min(1) Integer id) {
-        return filmService.findFilm(id);
+        return filmService.findFilmById(id);
     }
 
     @GetMapping("/popular")

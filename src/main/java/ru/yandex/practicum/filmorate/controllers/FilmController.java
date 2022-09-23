@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.validation.ValidationSequence;
+import ru.yandex.practicum.filmorate.validators.ValidationSequence;
 import ru.yandex.practicum.filmorate.services.FilmService;
 
 

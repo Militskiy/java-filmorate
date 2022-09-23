@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.filmorate.model.validation.NullCheckGroup;
+import ru.yandex.practicum.filmorate.validators.NullCheckGroup;
 import ru.yandex.practicum.filmorate.annotations.FilmDateConstraint;
 
 import javax.validation.constraints.NotBlank;

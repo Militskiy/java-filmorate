@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.films.FilmStorage;
-import ru.yandex.practicum.filmorate.utils.FilmValidator;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -29,7 +28,6 @@ public class FilmService {
     }
 
     public Film createFilm(Film film) {
-        FilmValidator.validateFilm(film);
         film.setId(getNextId());
         filmStorage.createFilm(film);
         log.debug("Added new film {}", film);
@@ -37,7 +35,6 @@ public class FilmService {
     }
 
     public Film updateFilm(Film film) {
-        FilmValidator.validateFilm(film);
         if (filmStorage.findFilmById(film.getId()).isPresent()) {
             filmStorage.updateFilm(film);
             log.debug("Updated film with ID: {}", film.getId());

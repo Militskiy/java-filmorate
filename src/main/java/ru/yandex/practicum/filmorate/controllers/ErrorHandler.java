@@ -48,10 +48,12 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
-        log.debug(String.format("Validation failed for request body: %s",
+        log.debug(String.format("Validation failed - field: %s, message: %s",
+                Objects.requireNonNull(e.getBindingResult().getFieldError()).getField(),
                 Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage()));
         return new ErrorResponse(
-                String.format("Validation failed for request body: %s",
+                String.format("Validation failed - field: %s, message: %s",
+                        Objects.requireNonNull(e.getBindingResult().getFieldError()).getField(),
                         Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage())
         );
     }

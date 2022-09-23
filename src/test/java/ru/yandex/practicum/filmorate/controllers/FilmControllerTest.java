@@ -12,7 +12,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
-import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
@@ -93,14 +92,14 @@ public class FilmControllerTest {
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException))
-                .andExpect(result -> assertEquals("Film release date must be after 28.12.1985",
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(
+                        result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException));
     }
 
     @Test
     void tryToCreateFilmWithFutureDateBadRequest() throws Exception {
-        Film film = new Film("name", RandomString.make(200), LocalDate.now().plusDays(1), 1);
+        Film film = new Film("name", RandomString.make(200),
+                LocalDate.now().plusDays(1), 1);
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -149,7 +148,7 @@ public class FilmControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(result ->
                         assertTrue(result.getResolvedException() instanceof NoSuchFilmException))
-                .andExpect(result -> assertEquals("No film with such ID",
+                .andExpect(result -> assertEquals("No film with such ID: 10",
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 

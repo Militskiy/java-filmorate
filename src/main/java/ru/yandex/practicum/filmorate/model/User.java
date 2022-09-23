@@ -20,6 +20,7 @@ import java.util.Set;
 public class User {
 
     private int id;
+    @NotNull
     @Email
     private String email;
     @NotBlank(message = "Invalid login")

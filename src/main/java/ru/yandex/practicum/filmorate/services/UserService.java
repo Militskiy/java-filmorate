@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.users.UserStorage;
-import ru.yandex.practicum.filmorate.utils.UserValidator;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -26,7 +25,6 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        UserValidator.validateUser(user);
         user.setId(getNextId());
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
@@ -37,13 +35,12 @@ public class UserService {
     }
 
     public User updateUser(User user) {
-        UserValidator.validateUser(user);
         if (userStorage.findUserById(user.getId()).isPresent()) {
             userStorage.updateUser(user);
             log.debug("Edited user with id: {} and name: {}", user.getId(), user.getName());
             return user;
         } else {
-            throw new NoSuchUserException("No user with such ID:" + user.getId());
+            throw new NoSuchUserException("No user with such ID: " + user.getId());
         }
     }
 

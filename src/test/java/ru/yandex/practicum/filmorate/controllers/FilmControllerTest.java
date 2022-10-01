@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
@@ -28,8 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 public class FilmControllerTest {
 
     private static final LocalDate TEST_DATE = LocalDate.of(1895, 12, 28);
@@ -87,7 +89,8 @@ public class FilmControllerTest {
 
     @Test
     void tryToCreateFilmWithEarlyDateBadRequest() throws Exception {
-        Film film = new Film("name", RandomString.make(200), TEST_DATE.minusDays(1), 1);
+        Film film = new Film("name", RandomString.make(200),
+                TEST_DATE.minusDays(1), 1);
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))

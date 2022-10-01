@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.yandex.practicum.filmorate.constants.Genres;
+import ru.yandex.practicum.filmorate.constants.Ratings;
 import ru.yandex.practicum.filmorate.validators.NullCheckGroup;
 import ru.yandex.practicum.filmorate.annotations.FilmDateConstraint;
 
@@ -30,10 +32,20 @@ public class Film {
     private LocalDate releaseDate;
     @Positive(message = "Duration must be positive")
     private long duration;
+    private Ratings rating;
+    private final Set<Genres> genres = new HashSet<>();
 
     private final Set<Integer> userLikes = new HashSet<>();
 
     public Film(String name, String description, LocalDate releaseDate, long duration) {
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+    }
+
+    public Film(int id, String name, String description, LocalDate releaseDate, long duration) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;

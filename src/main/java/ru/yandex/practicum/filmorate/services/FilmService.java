@@ -2,13 +2,14 @@ package ru.yandex.practicum.filmorate.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
-import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.films.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -17,45 +18,31 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class FilmService {
-
+    @Qualifier("DbFilmStorage")
     private final FilmStorage filmStorage;
     private final UserService userService;
-    private Integer filmId = 0;
 
     public Collection<Film> findAllFilms() {
         log.debug("Listing all films");
-        return filmStorage.findAllFilms();
+        return filmStorage.findAll();
     }
 
     public Film createFilm(Film film) {
-        film.setId(getNextId());
-        filmStorage.createFilm(film);
+        filmStorage.create(film);
         log.debug("Added new film {}", film);
         return film;
     }
 
+    // проверки в storage
     public Film updateFilm(Film film) {
-        if (filmStorage.findFilmById(film.getId()).isPresent()) {
-            filmStorage.updateFilm(film);
-            log.debug("Updated film with ID: {}", film.getId());
-            return film;
-        } else {
-            throw new NoSuchFilmException("No film with such ID: " + film.getId());
-        }
+        filmStorage.update(film);
+        return film;
     }
 
-    public Integer addLike(Integer filmId, Integer userId) throws NoSuchFilmException, NoSuchUserException {
-        User user = userService.findUserById(userId);
-        Film film = findFilmById(filmId);
-        if (film.addLike(userId)) {
-            log.debug("User: {} liked Film: {}, total likes now: {}",
-                    user.getName(),
-                    film.getName(),
-                    film.getUserLikes().size());
-            return film.getUserLikes().size();
-        } else {
-            throw new BadArgumentsException("Film already liked");
-        }
+    public void addLike(Integer filmId, Integer userId) throws NoSuchFilmException, NoSuchUserException {
+        userService.findUserById(userId);
+        findFilmById(filmId);
+        filmStorage.addLike(filmId, userId);
     }
 
     public Integer removeLike(Integer filmId, Integer userId) throws NoSuchFilmException, NoSuchUserException {
@@ -74,18 +61,13 @@ public class FilmService {
 
     public Collection<Film> findPopularFilms(Integer count) {
         log.debug("Listing {} popular films", count);
-        return filmStorage.findAllFilms().stream()
+        return filmStorage.findAll().stream()
                 .sorted((f1, f2) -> f2.getUserLikes().size() - f1.getUserLikes().size())
                 .limit(count)
                 .collect(Collectors.toList());
     }
 
     public Film findFilmById(Integer filmId) {
-        return filmStorage.findFilmById(filmId).orElseThrow(
-                () -> new NoSuchFilmException("No film with such ID: " + filmId));
-    }
-
-    private Integer getNextId() {
-        return ++filmId;
+        return filmStorage.findById(filmId);
     }
 }

@@ -55,11 +55,11 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Integer addLike(
+    public void addLike(
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId
     ) {
-        return filmService.addLike(id, userId);
+        filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")

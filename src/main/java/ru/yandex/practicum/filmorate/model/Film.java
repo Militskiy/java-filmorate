@@ -3,10 +3,8 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.filmorate.constants.Genres;
-import ru.yandex.practicum.filmorate.constants.Ratings;
-import ru.yandex.practicum.filmorate.validators.NullCheckGroup;
 import ru.yandex.practicum.filmorate.annotations.FilmDateConstraint;
+import ru.yandex.practicum.filmorate.validators.NullCheckGroup;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -14,8 +12,10 @@ import javax.validation.constraints.PastOrPresent;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 @Data
 @AllArgsConstructor
@@ -32,9 +32,8 @@ public class Film {
     private LocalDate releaseDate;
     @Positive(message = "Duration must be positive")
     private long duration;
-    private Ratings rating;
-    private final Set<Genres> genres = new HashSet<>();
-
+    private BaseEntity mpa;
+    private final Set<BaseEntity> genres = new TreeSet<>(Comparator.comparingInt(BaseEntity::getId));
     private final Set<Integer> userLikes = new HashSet<>();
 
     public Film(String name, String description, LocalDate releaseDate, long duration) {
@@ -54,6 +53,10 @@ public class Film {
 
     public boolean addLike(Integer userId) {
         return userLikes.add(userId);
+    }
+
+    public boolean addGenre(Genre genre) {
+        return genres.add(genre);
     }
 
     public boolean removeLike(Integer userId) {

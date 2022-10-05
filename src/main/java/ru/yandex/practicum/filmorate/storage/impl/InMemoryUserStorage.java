@@ -1,12 +1,10 @@
-package ru.yandex.practicum.filmorate.storage.users;
+package ru.yandex.practicum.filmorate.storage.impl;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
@@ -14,22 +12,24 @@ public class InMemoryUserStorage implements UserStorage {
     private final Map<Integer, User> users = new HashMap<>();
 
     @Override
-    public Collection<User> findAllUsers() {
+    public Collection<User> findAll() {
         return users.values();
     }
 
     @Override
-    public void createUser(User user) {
+    public User create(User user) {
         users.put(user.getId(), user);
+        return user;
     }
 
     @Override
-    public void updateUser(User user) {
+    public int update(User user) {
         users.put(user.getId(), user);
+        return 1;
     }
 
     @Override
-    public Optional<User> findUserById(Integer id) {
+    public Optional<User> findById(Integer id) {
         return Optional.ofNullable(users.get(id));
     }
 }

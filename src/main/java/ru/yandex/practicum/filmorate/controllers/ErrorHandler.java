@@ -6,9 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
-import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
-import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
+import ru.yandex.practicum.filmorate.exceptions.*;
 import ru.yandex.practicum.filmorate.model.ErrorResponse;
 
 import java.util.Objects;
@@ -34,6 +32,20 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNoSuchFilmException(final NoSuchFilmException e) {
+        log.debug(e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNoSuchMpaException(final NoSuchMpaException e) {
+        log.debug(e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNoSuchRatingException(final NoSuchGenreException e) {
         log.debug(e.getMessage());
         return new ErrorResponse(e.getMessage());
     }

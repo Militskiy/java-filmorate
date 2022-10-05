@@ -2,13 +2,17 @@ package ru.yandex.practicum.filmorate.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.storage.FriendStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.users.UserStorage;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,80 +20,70 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
+    @Qualifier("DbUserStorage")
     private final UserStorage userStorage;
-    private Integer userId = 0;
+    private final FriendStorage friendStorage;
 
     public Collection<User> findAllUsers() {
         log.debug("Sending user list");
-        return userStorage.findAllUsers();
+        return userStorage.findAll();
     }
 
     public User createUser(User user) {
-        user.setId(getNextId());
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-        userStorage.createUser(user);
-        log.debug("Added new user: {}", user);
-        return user;
+        log.debug("Adding new user: {}", user);
+        return userStorage.create(user);
     }
 
     public User updateUser(User user) {
-        if (userStorage.findUserById(user.getId()).isPresent()) {
-            userStorage.updateUser(user);
-            log.debug("Edited user with id: {} and name: {}", user.getId(), user.getName());
+        if (userStorage.update(user) == 1) {
+            log.debug("Updating user with ID: {}", user.getId());
             return user;
         } else {
             throw new NoSuchUserException("No user with such ID: " + user.getId());
         }
     }
 
-    public User addFriends(Integer userId, Integer friendId) {
-        if (findUserById(friendId).addFriend(userId) &&
-                findUserById(userId).addFriend(friendId)) {
-            log.debug("Users {} and {} are now friends",
-                    findUserById(userId).getName(),
-                    findUserById(friendId).getName());
-            return findUserById(userId);
-        } else {
-            throw new BadArgumentsException("Users are already friends");
-        }
+    // проверки в friendStorage, c целью не использовать доп запросы
+    public void addFriends(Integer userId, Integer friendId) {
+        friendStorage.createFriend(userId, friendId);
+        log.debug("Creating friend link between users with ids: {} and {}", userId, friendId);
     }
 
-    public User deleteFriends(Integer userId, Integer friendId) {
-        if (findUserById(userId).deleteFriend(friendId) &&
-                findUserById(friendId).deleteFriend(userId)) {
-            log.debug("Users {} and {} are no longer friends",
-                    findUserById(userId).getName(),
-                    findUserById(friendId).getName());
-            return findUserById(userId);
-        } else {
+    public void deleteFriends(Integer userId, Integer friendId) {
+        if (!friendStorage.delete(userId, friendId)) {
             throw new BadArgumentsException("Users are not friends");
         }
     }
 
+    // проверка наличия пользователя без доп SQL запросов от findById
     public Collection<User> findFriends(Integer userId) {
-        log.debug("Listing {}'s friends", findUserById(userId).getName()
-        );
-        return findUserById(userId).getFriends().stream()
-                .map(this::findUserById)
-                .collect(Collectors.toList());
+        List<User> result = new ArrayList<>(friendStorage.findFriends(userId));
+        if (result.get(0).getId() == userId) {
+            return result.stream().skip(1).collect(Collectors.toList());
+        } else {
+            throw new NoSuchUserException("No user with such ID: " + userId);
+        }
     }
-
-    public Collection<User> findCommonFriends(Integer userId, Integer otherId) throws NoSuchUserException {
-        log.debug("Listing {}'s and {}'s common friends", findUserById(userId), findUserById(otherId));
-        return findUserById(userId).getFriends().stream()
-                .filter(id -> findUserById(otherId).getFriends().contains(id))
-                .map(this::findUserById)
-                .collect(Collectors.toList());
+    // проверка наличия пользователя без доп SQL запросов от findById
+    public Collection<User> findCommonFriends(Integer userId, Integer otherId) {
+        List<User> result = new ArrayList<>(friendStorage.findCommonFriends(userId, otherId));
+        if(result.get(0).getId() == userId || result.get(1).getId() == userId) {
+            if (result.get(1).getId() == otherId || result.get(0).getId() == otherId) {
+                log.debug("Listing common friends for users with ids {} and {}", userId, otherId);
+                return result.stream().skip(2).collect(Collectors.toList());
+            } else {
+                throw new NoSuchUserException("No user with such ID: " + otherId);
+            }
+        } else {
+            throw new NoSuchUserException("No user with such ID: " + userId);
+        }
     }
 
     public User findUserById(Integer userId) {
-        return userStorage.findUserById(userId).orElseThrow(
+        return userStorage.findById(userId).orElseThrow(
                 () -> new NoSuchUserException("No user with such ID: " + userId));
-    }
-
-    private Integer getNextId() {
-        return ++userId;
     }
 }

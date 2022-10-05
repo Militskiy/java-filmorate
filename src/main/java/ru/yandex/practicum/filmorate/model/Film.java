@@ -32,6 +32,7 @@ public class Film {
     private LocalDate releaseDate;
     @Positive(message = "Duration must be positive")
     private long duration;
+    @NotNull
     private BaseEntity mpa;
     private final Set<BaseEntity> genres = new TreeSet<>(Comparator.comparingInt(BaseEntity::getId));
     private final Set<Integer> userLikes = new HashSet<>();
@@ -49,6 +50,14 @@ public class Film {
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
+    }
+
+    public Film(String name, String description, LocalDate releaseDate, long duration, BaseEntity mpa) {
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+        this.mpa = mpa;
     }
 
     public boolean addLike(Integer userId) {

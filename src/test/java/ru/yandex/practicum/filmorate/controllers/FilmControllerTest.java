@@ -13,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
+import ru.yandex.practicum.filmorate.model.BaseEntity;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
@@ -48,9 +49,9 @@ public class FilmControllerTest {
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
     void shouldFindAllFilms() throws Exception {
-        Film film1 = new Film("name", "1".repeat(200), TEST_DATE, 1);
-        Film film2 = new Film("name", null, TEST_DATE, 1);
-        Film film3 = new Film("name", "", TEST_DATE, 1);
+        Film film1 = new Film("name", "1".repeat(200), TEST_DATE, 1, new BaseEntity(1));
+        Film film2 = new Film("name", null, TEST_DATE, 1, new BaseEntity(1));
+        Film film3 = new Film("name", "", TEST_DATE, 1, new BaseEntity(1));
         filmController.createFilm(film1);
         filmController.createFilm(film2);
         filmController.createFilm(film3);
@@ -64,7 +65,7 @@ public class FilmControllerTest {
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
     void shouldCreateFilm() throws Exception {
-        Film film = new Film("name", "description", TEST_DATE, 1);
+        Film film = new Film("name", "description", TEST_DATE, 1, new BaseEntity(1));
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -144,23 +145,23 @@ public class FilmControllerTest {
 
     @Test
     void tryToUpdateFilmWithWrongIdNotFound() throws Exception {
-        Film film = new Film(10, "name", RandomString.make(200), TEST_DATE, 1);
+        Film film = new Film(10, "name", RandomString.make(200), TEST_DATE, 1, new BaseEntity(1));
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                         put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(result ->
                         assertTrue(result.getResolvedException() instanceof NoSuchFilmException))
-                .andExpect(result -> assertEquals("No film with such ID: 10",
+                .andExpect(result -> assertEquals("No Film with such ID: 10",
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
     void createsAndUpdatesFilm() throws Exception {
-        Film film = new Film("name", RandomString.make(200), TEST_DATE, 1);
+        Film film = new Film("name", RandomString.make(200), TEST_DATE, 1, new BaseEntity(1));
         filmController.createFilm(film);
-        Film updatedFilm = new Film(film.getId(), "updated", RandomString.make(1), TEST_DATE, 2);
+        Film updatedFilm = new Film(film.getId(), "updated", RandomString.make(1), TEST_DATE, 2, new BaseEntity(1));
         String body = objectMapper.writeValueAsString(updatedFilm);
         this.mockMvc.perform(put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

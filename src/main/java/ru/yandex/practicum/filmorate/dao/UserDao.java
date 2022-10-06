@@ -1,15 +1,26 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.dao;
 
-import ru.yandex.practicum.filmorate.model.Friend;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
 
-public interface FriendStorage extends Storage<Friend> {
+public interface UserDao extends Dao<User> {
 
     String FIND_ALL_QUERY =
             "SELECT * " +
-                    "FROM FRIENDS";
+                    "FROM USERS";
+    String FIND_USER_QUERY =
+            "SELECT * " +
+                    "FROM USERS " +
+                    "WHERE USER_ID = ?";
+    String CREATE_USER_QUERY =
+            "INSERT INTO USERS (USER_EMAIL, USER_LOGIN, USER_NAME, BIRTHDAY) " +
+                    "VALUES (?, ?, ?, ?)";
+    String UPDATE_USER_QUERY =
+            "UPDATE USERS " +
+                    "SET USER_EMAIL = ?, USER_LOGIN = ?, USER_NAME = ?, BIRTHDAY = ? " +
+                    "WHERE USER_ID = ?";
+
 
     String FIND_FRIENDS_QUERY =
             "SELECT *\n" +
@@ -53,4 +64,8 @@ public interface FriendStorage extends Storage<Friend> {
     Collection<User> findCommonFriends(Integer userId, Integer otherId);
 
     void createFriend(Integer userId, Integer friendId);
+
+    User create(User user);
+
+    int update(User user);
 }

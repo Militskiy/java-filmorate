@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.dao;
 
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -9,9 +9,12 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 
-public interface Storage<T> {
+public interface Dao<T> {
     Collection<T> findAll();
+
+    Optional<T> findById(Integer id);
 
     default User makeUser(ResultSet rs) throws SQLException {
         int id = rs.getInt("user_id");

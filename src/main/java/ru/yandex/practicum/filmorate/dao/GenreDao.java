@@ -1,10 +1,8 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.dao;
 
 import ru.yandex.practicum.filmorate.model.Genre;
 
-import java.util.Optional;
-
-public interface GenreStorage extends Storage<Genre> {
+public interface GenreDao extends Dao<Genre> {
 
     String FIND_GENRE_BY_ID =
             "SELECT * " +
@@ -13,5 +11,4 @@ public interface GenreStorage extends Storage<Genre> {
     String FIND_ALL =
             "SELECT * " +
                     "FROM GENRES";
-    Optional<Genre> findById(Integer genreId);
 }

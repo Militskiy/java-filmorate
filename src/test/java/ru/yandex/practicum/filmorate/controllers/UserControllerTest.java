@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -45,7 +46,7 @@ public class UserControllerTest {
     private UserController userController;
 
 
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Transactional
     @Test
     void shouldFindAllUsers() throws Exception {
         User user1 = new User("test@test.com", "test", "", BIRTHDAY);
@@ -63,7 +64,8 @@ public class UserControllerTest {
                 .andExpect(content().json(body));
     }
 
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    @Transactional
     @Test
     void givenNewUserWithNullName_whenCreated_thenAddsUserWithNameEqualsLogin() throws Exception {
         //given
@@ -188,7 +190,7 @@ public class UserControllerTest {
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Transactional
     @Test
     void createsAndUpdatesUser() throws Exception {
         User user = new User("email@email.com", "login", "name", BIRTHDAY);

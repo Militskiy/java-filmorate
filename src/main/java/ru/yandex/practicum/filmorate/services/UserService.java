@@ -4,8 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.storage.FriendStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -20,9 +19,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
 
-    @Qualifier("DbUserStorage")
-    private final UserStorage userStorage;
-    private final FriendStorage friendStorage;
+    @Qualifier("UserDaoImpl")
+    private final UserDao userStorage;
 
     public Collection<User> findAllUsers() {
         log.debug("Sending user list");
@@ -48,19 +46,19 @@ public class UserService {
 
     // проверки в friendStorage, c целью не использовать доп запросы
     public void addFriends(Integer userId, Integer friendId) {
-        friendStorage.createFriend(userId, friendId);
+        userStorage.createFriend(userId, friendId);
         log.debug("Creating friend link between users with ids: {} and {}", userId, friendId);
     }
 
     public void deleteFriends(Integer userId, Integer friendId) {
-        if (!friendStorage.delete(userId, friendId)) {
+        if (!userStorage.delete(userId, friendId)) {
             throw new BadArgumentsException("Users are not friends");
         }
     }
 
     // проверка наличия пользователя без доп SQL запросов от findById
     public Collection<User> findFriends(Integer userId) {
-        List<User> result = new ArrayList<>(friendStorage.findFriends(userId));
+        List<User> result = new ArrayList<>(userStorage.findFriends(userId));
         if (result.get(0).getId() == userId) {
             return result.stream().skip(1).collect(Collectors.toList());
         } else {
@@ -69,7 +67,7 @@ public class UserService {
     }
     // проверка наличия пользователя без доп SQL запросов от findById
     public Collection<User> findCommonFriends(Integer userId, Integer otherId) {
-        List<User> result = new ArrayList<>(friendStorage.findCommonFriends(userId, otherId));
+        List<User> result = new ArrayList<>(userStorage.findCommonFriends(userId, otherId));
         if(result.get(0).getId() == userId || result.get(1).getId() == userId) {
             if (result.get(1).getId() == otherId || result.get(0).getId() == otherId) {
                 log.debug("Listing common friends for users with ids {} and {}", userId, otherId);

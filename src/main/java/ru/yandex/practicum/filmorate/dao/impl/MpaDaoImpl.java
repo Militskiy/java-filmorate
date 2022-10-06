@@ -1,11 +1,11 @@
-package ru.yandex.practicum.filmorate.storage.impl;
+package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dao.MpaDao;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -13,7 +13,7 @@ import java.util.Optional;
 @AllArgsConstructor
 @Component
 @Slf4j
-public class DbMpaStorage implements MpaStorage {
+public class MpaDaoImpl implements MpaDao {
 
 
 

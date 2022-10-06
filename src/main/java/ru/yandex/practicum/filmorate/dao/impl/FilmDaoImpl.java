@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.impl;
+package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,12 +8,12 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -25,9 +25,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 @AllArgsConstructor
-@Component("DbFilmStorage")
+@Component("FilmDaoImpl")
 @Slf4j
-public class DbFilmStorage implements FilmStorage {
+public class FilmDaoImpl implements FilmDao {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
@@ -67,9 +67,12 @@ public class DbFilmStorage implements FilmStorage {
                     sb.append(ADD_GENRE).append(genre.getId()).append(");\n");
                 });
                 jdbcTemplate.update(sb.toString(), parameters);
+                film.getGenres().clear();
+                getFilmGenres(film.getId()).forEach(film::addGenre);
             } else {
                 jdbcTemplate.update(DELETE_GENRES_QUERY, parameters);
             }
+            film.setMpa(getFilmRating(film.getId()));
             return film;
         } else {
             throw new NoSuchFilmException("No Film with such ID: " + film.getId());
@@ -77,16 +80,14 @@ public class DbFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film findById(Integer filmId) {
+    public Optional<Film> findById(Integer filmId) {
         Optional<Film> optionalFilm = jdbcTemplate.getJdbcTemplate()
                 .query(FIND_FILM, (rs, rowNum) -> makeFilm(rs), filmId)
                 .stream().findFirst();
         if (optionalFilm.isPresent()) {
-            Film film = optionalFilm.get();
-            getFilmLikes(film.getId()).forEach(film::addLike);
-            getFilmGenres(film.getId()).forEach(film::addGenre);
-            film.setMpa(getFilmRating(film.getId()));
-            return film;
+            getFilmLikes(optionalFilm.get().getId()).forEach(optionalFilm.get()::addLike);
+            getFilmGenres(optionalFilm.get().getId()).forEach(optionalFilm.get()::addGenre);
+            return optionalFilm;
         } else {
             throw new NoSuchFilmException("No Film with such ID: " + filmId);
         }
@@ -98,7 +99,6 @@ public class DbFilmStorage implements FilmStorage {
         result.forEach(film -> {
             getFilmLikes(film.getId()).forEach(film::addLike);
             getFilmGenres(film.getId()).forEach(film::addGenre);
-            film.setMpa(getFilmRating(film.getId()));
         });
         return result;
     }
@@ -152,6 +152,8 @@ public class DbFilmStorage implements FilmStorage {
         String filmDescription = rs.getString("film_description");
         LocalDate releaseDate = rs.getDate("release_date").toLocalDate();
         int duration = rs.getInt("duration");
-        return new Film(id, filmName, filmDescription, releaseDate, duration);
+        int ratingId = rs.getInt("rating_id");
+        String ratingName = rs.getString("rating_name");
+        return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName));
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -11,10 +12,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
-import ru.yandex.practicum.filmorate.model.BaseEntity;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,16 +24,17 @@ import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
+@AutoConfigureTestDatabase
 @ActiveProfiles("test")
 public class FilmControllerTest {
 
@@ -46,12 +49,13 @@ public class FilmControllerTest {
     @SpyBean
     FilmController filmController;
 
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    //@DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
+    @Transactional
     void shouldFindAllFilms() throws Exception {
-        Film film1 = new Film("name", "1".repeat(200), TEST_DATE, 1, new BaseEntity(1));
-        Film film2 = new Film("name", null, TEST_DATE, 1, new BaseEntity(1));
-        Film film3 = new Film("name", "", TEST_DATE, 1, new BaseEntity(1));
+        Film film1 = new Film("name", "1".repeat(200), TEST_DATE, 1, new Mpa(1, "G"));
+        Film film2 = new Film("name", null, TEST_DATE, 1, new Mpa(1, "G"));
+        Film film3 = new Film("name", "", TEST_DATE, 1, new Mpa(1, "G"));
         filmController.createFilm(film1);
         filmController.createFilm(film2);
         filmController.createFilm(film3);
@@ -62,10 +66,12 @@ public class FilmControllerTest {
                 .andExpect(content().json(listBody));
     }
 
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    //@DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
+    @Transactional
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void shouldCreateFilm() throws Exception {
-        Film film = new Film("name", "description", TEST_DATE, 1, new BaseEntity(1));
+        Film film = new Film("name", "description", TEST_DATE, 1, new Mpa(1, "G"));
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -79,7 +85,7 @@ public class FilmControllerTest {
 
     @Test
     void tryToCreateFilmWithEmptyNameBadRequest() throws Exception {
-        Film film = new Film("", RandomString.make(200), TEST_DATE, 1);
+        Film film = new Film("", RandomString.make(200), TEST_DATE, 1, new Mpa(1, "G"));
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -91,7 +97,7 @@ public class FilmControllerTest {
     @Test
     void tryToCreateFilmWithEarlyDateBadRequest() throws Exception {
         Film film = new Film("name", RandomString.make(200),
-                TEST_DATE.minusDays(1), 1);
+                TEST_DATE.minusDays(1), 1, new Mpa(1, "G"));
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -103,7 +109,7 @@ public class FilmControllerTest {
     @Test
     void tryToCreateFilmWithFutureDateBadRequest() throws Exception {
         Film film = new Film("name", RandomString.make(200),
-                LocalDate.now().plusDays(1), 1);
+                LocalDate.now().plusDays(1), 1, new Mpa(1, "G"));
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -112,7 +118,13 @@ public class FilmControllerTest {
 
     @Test
     void tryToCreateFilmWithNullDateBadRequest() throws Exception {
-        Film film = new Film("name", RandomString.make(200), null, 1);
+        Film film = new Film(
+                "name",
+                RandomString.make(200),
+                null,
+                1,
+                new Mpa(1, "G")
+        );
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -123,7 +135,7 @@ public class FilmControllerTest {
 
     @Test
     void tryToCreateFilmWithLongDescriptionBadRequest() throws Exception {
-        Film film = new Film("name", RandomString.make(201), TEST_DATE, 1);
+        Film film = new Film("name", RandomString.make(201), TEST_DATE, 1, new Mpa(1, "G"));
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -134,7 +146,7 @@ public class FilmControllerTest {
 
     @Test
     void tryToCreateFilmWithNegativeDurationBadRequest() throws Exception {
-        Film film = new Film("name", RandomString.make(200), TEST_DATE, -1);
+        Film film = new Film("name", RandomString.make(200), TEST_DATE, -1, new Mpa(1, "G"));
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                 post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -145,7 +157,14 @@ public class FilmControllerTest {
 
     @Test
     void tryToUpdateFilmWithWrongIdNotFound() throws Exception {
-        Film film = new Film(10, "name", RandomString.make(200), TEST_DATE, 1, new BaseEntity(1));
+        Film film = new Film(
+                10,
+                "name",
+                RandomString.make(200),
+                TEST_DATE,
+                1,
+                new Mpa(1, "G")
+        );
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                         put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -156,12 +175,26 @@ public class FilmControllerTest {
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    //@DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
+    @Transactional
     void createsAndUpdatesFilm() throws Exception {
-        Film film = new Film("name", RandomString.make(200), TEST_DATE, 1, new BaseEntity(1));
+        Film film = new Film(
+                "name",
+                RandomString.make(200),
+                TEST_DATE,
+                1,
+                new Mpa(1, "G")
+        );
         filmController.createFilm(film);
-        Film updatedFilm = new Film(film.getId(), "updated", RandomString.make(1), TEST_DATE, 2, new BaseEntity(1));
+        Film updatedFilm = new Film(
+                film.getId(),
+                "updated",
+                RandomString.make(1),
+                TEST_DATE,
+                2,
+                new Mpa(1, "G")
+        );
         String body = objectMapper.writeValueAsString(updatedFilm);
         this.mockMvc.perform(put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

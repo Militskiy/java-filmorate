@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchMpaException;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.MpaStorage;
+import ru.yandex.practicum.filmorate.dao.MpaDao;
 
 import java.util.Collection;
 
@@ -14,7 +14,7 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class MpaService {
 
-    private final MpaStorage mpaStorage;
+    private final MpaDao mpaStorage;
 
     public Mpa findById(Integer mpaId) {
         return mpaStorage.findById(mpaId).orElseThrow(

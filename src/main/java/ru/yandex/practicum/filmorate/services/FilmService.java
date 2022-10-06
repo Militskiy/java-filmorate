@@ -9,7 +9,7 @@ import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.dao.FilmDao;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class FilmService {
-    @Qualifier("DbFilmStorage")
-    private final FilmStorage filmStorage;
+    @Qualifier("FilmDaoImpl")
+    private final FilmDao filmStorage;
     private final UserService userService;
 
     public Collection<Film> findAllFilms() {
@@ -68,6 +68,8 @@ public class FilmService {
     }
 
     public Film findFilmById(Integer filmId) {
-        return filmStorage.findById(filmId);
+        return filmStorage.findById(filmId).orElseThrow(
+                () -> new NoSuchFilmException("No Film with such ID: " + filmId)
+        );
     }
 }

@@ -33,26 +33,11 @@ public class Film {
     @Positive(message = "Duration must be positive")
     private long duration;
     @NotNull
-    private BaseEntity mpa;
-    private final Set<BaseEntity> genres = new TreeSet<>(Comparator.comparingInt(BaseEntity::getId));
+    private Mpa mpa;
+    private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
     private final Set<Integer> userLikes = new HashSet<>();
 
-    public Film(String name, String description, LocalDate releaseDate, long duration) {
-        this.name = name;
-        this.description = description;
-        this.releaseDate = releaseDate;
-        this.duration = duration;
-    }
-
-    public Film(int id, String name, String description, LocalDate releaseDate, long duration) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.releaseDate = releaseDate;
-        this.duration = duration;
-    }
-
-    public Film(String name, String description, LocalDate releaseDate, long duration, BaseEntity mpa) {
+    public Film(String name, String description, LocalDate releaseDate, long duration, Mpa mpa) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;

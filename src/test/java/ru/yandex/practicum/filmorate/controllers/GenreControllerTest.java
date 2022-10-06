@@ -17,18 +17,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
 @ActiveProfiles("test")
-class GenreControllerTest {
+class GenreControllerTest implements TestJsons {
 
     @Autowired
     private MockMvc mockMvc;
 
-    private final static String GENRES =
-            "[{\"id\":1,\"name\":\"Комедия\"}," +
-            "{\"id\":2,\"name\":\"Драма\"}," +
-            "{\"id\":3,\"name\":\"Мультфильм\"}," +
-            "{\"id\":4,\"name\":\"Триллер\"}," +
-            "{\"id\":5,\"name\":\"Документальный\"}," +
-            "{\"id\":6,\"name\":\"Боевик\"}]";
 
     @Test
     void findAll() throws Exception {

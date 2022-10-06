@@ -4,14 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
+import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.dao.FilmDao;
 
 import java.util.Collection;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,17 +44,9 @@ public class FilmService {
         filmStorage.addLike(filmId, userId);
     }
 
-    public Integer removeLike(Integer filmId, Integer userId) throws NoSuchFilmException, NoSuchUserException {
-        User user = userService.findUserById(userId);
-        Film film = findFilmById(filmId);
-        if (film.removeLike(userId)) {
-            log.debug("User: {} removed like from Film: {}, total likes now: {}",
-                    user.getName(),
-                    film.getName(),
-                    film.getUserLikes().size());
-            return film.getUserLikes().size();
-        } else {
-            throw new BadArgumentsException("Cannot remove like, film is not liked");
+    public void removeLike(Integer filmId, Integer userId) throws NoSuchFilmException, NoSuchUserException {
+        if (filmStorage.removeLike(filmId, userId) != 1) {
+         throw new NoSuchElementException("Film or user not found");
         }
     }
 

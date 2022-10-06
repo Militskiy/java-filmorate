@@ -25,8 +25,7 @@ public interface UserDao extends Dao<User> {
     String FIND_FRIENDS_QUERY =
             "SELECT *\n" +
                     "FROM USERS\n" +
-                    "WHERE USER_ID = ?\n" +
-                    "OR USER_ID IN (\n" +
+                    "WHERE USER_ID IN (\n" +
                     "    SELECT FRIEND_ID\n" +
                     "    FROM FRIENDS\n" +
                     "    WHERE USER_ID = ?\n" +

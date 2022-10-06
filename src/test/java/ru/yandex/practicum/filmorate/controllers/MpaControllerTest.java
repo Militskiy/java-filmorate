@@ -17,17 +17,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
 @ActiveProfiles("test")
-class MpaControllerTest {
+class MpaControllerTest implements TestJsons {
 
     @Autowired
     private MockMvc mockMvc;
 
-    private final static String MPA =
-            "[{\"id\":1,\"name\":\"G\"}," +
-                    "{\"id\":2,\"name\":\"PG\"}," +
-                    "{\"id\":3,\"name\":\"PG-13\"}," +
-                    "{\"id\":4,\"name\":\"R\"}," +
-                    "{\"id\":5,\"name\":\"NC-17\"}]";
 
     @Test
     void findAll() throws Exception {

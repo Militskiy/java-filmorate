@@ -81,7 +81,7 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public Collection<User> findFriends(Integer userId) {
-        return jdbcTemplate.query(FIND_FRIENDS_QUERY, (rs, rowNum) -> makeUser(rs), userId, userId);
+        return jdbcTemplate.query(FIND_FRIENDS_QUERY, (rs, rowNum) -> makeUser(rs), userId);
     }
 
     @Override

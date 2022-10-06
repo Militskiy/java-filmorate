@@ -46,6 +46,8 @@ public interface FilmDao extends Dao<Film> {
             "INSERT INTO LIKES (USER_ID, FILM_ID)\n" +
                     "VALUES (?, ?)";
 
+    String DELETE_LIKE = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
+
     String GET_FILM_LIKES = "SELECT USER_ID FROM LIKES WHERE FILM_ID = ?";
     String GET_FILM_GENRES =
             "SELECT * " +
@@ -68,5 +70,5 @@ public interface FilmDao extends Dao<Film> {
 
     void addLike(Integer filmId, Integer userId);
 
-    void removeLike(Integer filmId, Integer userId);
+    int removeLike(Integer filmId, Integer userId);
 }

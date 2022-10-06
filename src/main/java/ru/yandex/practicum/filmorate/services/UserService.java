@@ -58,11 +58,10 @@ public class UserService {
 
     // проверка наличия пользователя без доп SQL запросов от findById
     public Collection<User> findFriends(Integer userId) {
-        List<User> result = new ArrayList<>(userStorage.findFriends(userId));
-        if (result.get(0).getId() == userId) {
-            return result.stream().skip(1).collect(Collectors.toList());
+        if (userStorage.findById(userId).isPresent()) {
+            return userStorage.findFriends(userId);
         } else {
-            throw new NoSuchUserException("No user with such ID: " + userId);
+            throw new NoSuchUserException("No user with such ID: "+ userId);
         }
     }
     // проверка наличия пользователя без доп SQL запросов от findById

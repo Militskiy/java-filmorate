@@ -63,10 +63,10 @@ public class FilmController {
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Integer removeLike(
+    public void removeLike(
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId
     ) {
-        return filmService.removeLike(id, userId);
+        filmService.removeLike(id, userId);
     }
 }

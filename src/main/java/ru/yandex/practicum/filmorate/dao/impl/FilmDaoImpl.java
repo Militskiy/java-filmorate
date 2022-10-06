@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
+import ru.yandex.practicum.filmorate.exceptions.NoSuchGenreException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -66,7 +67,11 @@ public class FilmDaoImpl implements FilmDao {
                             .addValue("genreId" + genre.getId(), genre.getId());
                     sb.append(ADD_GENRE).append(genre.getId()).append(");\n");
                 });
-                jdbcTemplate.update(sb.toString(), parameters);
+                try {
+                    jdbcTemplate.update(sb.toString(), parameters);
+                } catch (DataAccessException e) {
+                    throw new NoSuchGenreException("No such genre");
+                }
                 film.getGenres().clear();
                 getFilmGenres(film.getId()).forEach(film::addGenre);
             } else {
@@ -113,8 +118,12 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
-    public void removeLike(Integer filmId, Integer userId) {
-
+    public int removeLike(Integer filmId, Integer userId) {
+        try {
+            return jdbcTemplate.getJdbcTemplate().update(DELETE_LIKE, filmId, userId);
+        } catch (DataAccessException e) {
+            throw new BadArgumentsException("No such users or already disliked");
+        }
     }
 
 

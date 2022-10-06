@@ -52,7 +52,9 @@ public class Film {
     public boolean addGenre(Genre genre) {
         return genres.add(genre);
     }
-
+    public boolean removeGenre(Genre genre) {
+        return genres.remove(genre);
+    }
     public boolean removeLike(Integer userId) {
         return userLikes.remove(userId);
     }

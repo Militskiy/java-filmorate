@@ -7,10 +7,9 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -21,6 +20,7 @@ import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
 @ActiveProfiles("test")
-public class UserControllerTest {
+public class UserControllerTest implements TestJsons {
 
     private final static LocalDate BIRTHDAY = LocalDate.now().minusDays(1);
 
@@ -45,9 +45,8 @@ public class UserControllerTest {
     @Autowired
     private UserController userController;
 
-
-    @Transactional
     @Test
+    @Sql(scripts = {"file:assets/scripts/restart.sql"})
     void shouldFindAllUsers() throws Exception {
         User user1 = new User("test@test.com", "test", "", BIRTHDAY);
         User user2 = new User("test@test.com", "test", null, BIRTHDAY);
@@ -64,9 +63,8 @@ public class UserControllerTest {
                 .andExpect(content().json(body));
     }
 
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
-    @Transactional
     @Test
+    @Sql(scripts = {"file:assets/scripts/restart.sql"})
     void givenNewUserWithNullName_whenCreated_thenAddsUserWithNameEqualsLogin() throws Exception {
         //given
         String body = objectMapper.writeValueAsString(
@@ -190,8 +188,8 @@ public class UserControllerTest {
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 
-    @Transactional
     @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void createsAndUpdatesUser() throws Exception {
         User user = new User("email@email.com", "login", "name", BIRTHDAY);
         userController.createUser(user);
@@ -201,5 +199,42 @@ public class UserControllerTest {
                         put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(body));
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void user3shouldFriendUser1ThenShouldFindUser1AsFriend() throws Exception {
+        this.mockMvc.perform(put("/users/3/friends/1"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(get("/users/3/friends"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(FRIEND));
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void user2shouldUnfriendUser1ThenShouldFindNoFriends() throws Exception {
+        this.mockMvc.perform(delete("/users/2/friends/1"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(get("/users/2/friends"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void user2shouldFriendUser3ThenShouldFindCommonFriend3WithUser1() throws Exception {
+        this.mockMvc.perform(put("/users/2/friends/3"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(get("/users/2/friends/common/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(
+                        "[{\"id\":3," +
+                                "\"email\":\"email3@test.com\"," +
+                                "\"login\":\"login3\"," +
+                                "\"name\":\"name3\"," +
+                                "\"birthday\":\"2022-10-01\"," +
+                                "\"friends\":[]}]")
+                );
     }
 }

@@ -237,4 +237,20 @@ public class UserControllerTest implements TestJsons {
                                 "\"friends\":[]}]")
                 );
     }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void whenAddingFriendThatIsAlreadyFriendShouldThrowBadArgument() throws Exception {
+        this.mockMvc.perform(put("/users/1/friends/2"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void whenAddingFriendThatIsUnknownShouldThrowNoSuchUser() throws Exception {
+        this.mockMvc.perform(put("/users/1/friends/5"))
+                .andExpect(status().isNotFound());
+        this.mockMvc.perform(put("/users/5/friends/1"))
+                .andExpect(status().isNotFound());
+    }
 }

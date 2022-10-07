@@ -46,8 +46,11 @@ public class UserService {
 
     // проверки в friendStorage, c целью не использовать доп запросы
     public void addFriends(Integer userId, Integer friendId) {
-        userStorage.createFriend(userId, friendId);
-        log.debug("Creating friend link between users with ids: {} and {}", userId, friendId);
+        if (userStorage.createFriend(userId, friendId)) {
+            log.debug("Creating friend link between users with ids: {} and {}", userId, friendId);
+        } else {
+            throw new BadArgumentsException("Users are already friends");
+        }
     }
 
     public void deleteFriends(Integer userId, Integer friendId) {

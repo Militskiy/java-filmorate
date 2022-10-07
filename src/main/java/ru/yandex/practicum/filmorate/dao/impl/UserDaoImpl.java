@@ -62,13 +62,13 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public void createFriend(Integer userId, Integer friendId) {
+    public boolean createFriend(Integer userId, Integer friendId) {
         try {
-            jdbcTemplate.update(CREATE_FRIEND_QUERY,
+            return jdbcTemplate.update(CREATE_FRIEND_QUERY,
                     userId, friendId,
                     userId, friendId,
                     friendId, userId, userId, friendId,
-                    friendId, userId, userId, friendId);
+                    friendId, userId, userId, friendId) > 0;
         } catch (DataAccessException e) {
             throw new NoSuchUserException("No such users");
         }

@@ -48,7 +48,7 @@ public interface FilmDao extends Dao<Film> {
 
     String DELETE_LIKE = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
 
-    String GET_FILM_LIKES = "SELECT USER_ID FROM LIKES WHERE FILM_ID = ?";
+    String GET_FILM_LIKES = "SELECT * FROM USERS WHERE USER_ID IN (SELECT USER_ID FROM LIKES WHERE FILM_ID = ?)";
     String GET_FILM_GENRES =
             "SELECT * " +
                     "FROM GENRES " +

@@ -219,7 +219,21 @@ public class FilmControllerTest implements TestJsons {
     void shouldAddLikeToFilmWithId1() throws Exception {
         this.mockMvc.perform(put("/films/1/like/1"))
                 .andExpect(status().isOk());
-        Assertions.assertEquals(Set.of(1, 3), filmController.findFilm(1).getUserLikes());
+        assertEquals("" +
+                "[User(id=3, " +
+                "email=email3@test.com, " +
+                "login=login3, " +
+                "name=name3, " +
+                "birthday=2022-10-01, " +
+                "friends=[]), " +
+                "User(id=1, " +
+                "email=email1@test.com, " +
+                "login=login1, " +
+                "name=name1, " +
+                "birthday=2022-10-01, " +
+                "friends=[])]",
+                filmController.findFilm(1).getUserLikes().toString()
+        );
     }
     @Test
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})

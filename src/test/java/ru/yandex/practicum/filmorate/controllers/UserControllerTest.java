@@ -233,8 +233,7 @@ public class UserControllerTest implements TestJsons {
                                 "\"email\":\"email3@test.com\"," +
                                 "\"login\":\"login3\"," +
                                 "\"name\":\"name3\"," +
-                                "\"birthday\":\"2022-10-01\"," +
-                                "\"friends\":[]}]")
+                                "\"birthday\":\"2022-10-01\"}]")
                 );
     }
 

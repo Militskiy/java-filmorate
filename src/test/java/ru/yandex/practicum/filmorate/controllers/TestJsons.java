@@ -6,8 +6,7 @@ public interface TestJsons {
                     "\"email\":\"email1@test.com\"," +
                     "\"login\":\"login1\"," +
                     "\"name\":\"name1\"," +
-                    "\"birthday\":\"2022-10-01\"," +
-                    "\"friends\":[]}]";
+                    "\"birthday\":\"2022-10-01\"}]";
      String MPA =
             "[{\"id\":1,\"name\":\"G\"}," +
                     "{\"id\":2,\"name\":\"PG\"}," +

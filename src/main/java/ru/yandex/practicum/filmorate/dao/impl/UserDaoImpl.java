@@ -22,16 +22,24 @@ import java.util.Optional;
 @Slf4j
 public class UserDaoImpl implements UserDao {
 
+    private final static String FIND_FRIEND_IDS =
+            "SELECT * FROM USERS WHERE USER_ID IN (SELECT FRIEND_ID FROM FRIENDS WHERE USER_ID = ?)";
+
     private final JdbcTemplate jdbcTemplate;
 
     @Override
     public Collection<User> findAll() {
-        return jdbcTemplate.query(FIND_ALL_QUERY, (rs, rowNum) -> makeUser(rs));
+        Collection<User> result = jdbcTemplate.query(FIND_ALL_QUERY, (rs, rowNum) -> makeUser(rs));
+        result.forEach(user -> getFriends(user.getId()).forEach(user::addFriend));
+        return result;
     }
 
     @Override
     public Optional<User> findById(Integer id) {
-        return jdbcTemplate.query(FIND_USER_QUERY, (rs, rowNum) -> makeUser(rs), id).stream().findFirst();
+        Optional<User> optionalUser =
+                jdbcTemplate.query(FIND_USER_QUERY, (rs, rowNum) -> makeUser(rs), id).stream().findFirst();
+        optionalUser.ifPresent(user -> getFriends(user.getId()).forEach(user::addFriend));
+        return optionalUser;
     }
 
     @Override
@@ -81,12 +89,21 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public Collection<User> findFriends(Integer userId) {
-        return jdbcTemplate.query(FIND_FRIENDS_QUERY, (rs, rowNum) -> makeUser(rs), userId);
+        Collection<User> result = jdbcTemplate.query(FIND_FRIENDS_QUERY, (rs, rowNum) -> makeUser(rs), userId);
+        result.forEach(user -> getFriends(user.getId()).forEach(user::addFriend));
+        return result;
     }
 
     @Override
     public Collection<User> findCommonFriends(Integer userId, Integer otherId) {
-        return jdbcTemplate.query(FIND_COMMON_FRIENDS_QUERY,
+        Collection<User> result = jdbcTemplate.query(FIND_COMMON_FRIENDS_QUERY,
                 (rs, rowNum) -> makeUser(rs), userId, otherId, userId, otherId);
+        result.forEach(user -> getFriends(user.getId()).forEach(user::addFriend));
+        return result;
+    }
+
+    private Collection<User> getFriends(Integer userId) {
+        return jdbcTemplate.query(FIND_FRIEND_IDS, (rs, rowNum) -> makeUser(rs), userId);
+
     }
 }

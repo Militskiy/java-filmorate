@@ -226,6 +226,8 @@ public class UserControllerTest implements TestJsons {
     void user2shouldFriendUser3ThenShouldFindCommonFriend3WithUser1() throws Exception {
         this.mockMvc.perform(put("/users/2/friends/3"))
                 .andExpect(status().isOk());
+        this.mockMvc.perform(put("/users/3/friends/1"))
+                .andExpect(status().isOk());
         this.mockMvc.perform(get("/users/2/friends/common/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(
@@ -233,7 +235,14 @@ public class UserControllerTest implements TestJsons {
                                 "\"email\":\"email3@test.com\"," +
                                 "\"login\":\"login3\"," +
                                 "\"name\":\"name3\"," +
-                                "\"birthday\":\"2022-10-01\"}]")
+                                "\"birthday\":\"2022-10-01\"," +
+                                "\"friends\":[{" +
+                                    "\"id\":1," +
+                                    "\"email\":\"email1@test.com\"," +
+                                    "\"login\":\"login1\"," +
+                                    "\"name\":\"name1\"," +
+                                    "\"birthday\":\"2022-10-01\"," +
+                                    "\"friends\":[]}]}]")
                 );
     }
 

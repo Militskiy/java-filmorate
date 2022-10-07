@@ -15,13 +15,12 @@ import ru.yandex.practicum.filmorate.exceptions.NoSuchGenreException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -126,12 +125,9 @@ public class FilmDaoImpl implements FilmDao {
         }
     }
 
-
-    private Collection<Integer> getFilmLikes(Integer filmId) {
-        List<Integer> result = new ArrayList<>();
-        jdbcTemplate.getJdbcTemplate()
-                .query(GET_FILM_LIKES, (rs, rowNum) -> result.add(rs.getInt("USER_ID")), filmId);
-        return result;
+    private Collection<User> getFilmLikes(Integer filmId) {
+        return jdbcTemplate.getJdbcTemplate()
+                .query(GET_FILM_LIKES, (rs, rowNum) -> makeUser(rs), filmId);
     }
 
     private Collection<Genre> getFilmGenres(Integer filmId) {

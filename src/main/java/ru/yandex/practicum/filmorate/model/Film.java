@@ -35,7 +35,7 @@ public class Film {
     @NotNull
     private Mpa mpa;
     private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
-    private final Set<Integer> userLikes = new HashSet<>();
+    private final Set<User> userLikes = new HashSet<>();
 
     public Film(String name, String description, LocalDate releaseDate, long duration, Mpa mpa) {
         this.name = name;
@@ -45,8 +45,8 @@ public class Film {
         this.mpa = mpa;
     }
 
-    public boolean addLike(Integer userId) {
-        return userLikes.add(userId);
+    public boolean addLike(User user) {
+        return userLikes.add(user);
     }
 
     public boolean addGenre(Genre genre) {
@@ -54,8 +54,5 @@ public class Film {
     }
     public boolean removeGenre(Genre genre) {
         return genres.remove(genre);
-    }
-    public boolean removeLike(Integer userId) {
-        return userLikes.remove(userId);
     }
 }

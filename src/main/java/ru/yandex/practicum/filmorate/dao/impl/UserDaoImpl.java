@@ -22,9 +22,6 @@ import java.util.Optional;
 @Slf4j
 public class UserDaoImpl implements UserDao {
 
-    private final static String FIND_FRIEND_IDS =
-            "SELECT * FROM USERS WHERE USER_ID IN (SELECT FRIEND_ID FROM FRIENDS WHERE USER_ID = ?)";
-
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -102,7 +99,8 @@ public class UserDaoImpl implements UserDao {
         return result;
     }
 
+    // для заполнения друзей в методах findAll/findById/findFriends/findCommonFriends
     private Collection<User> getFriends(Integer userId) {
-        return jdbcTemplate.query(FIND_FRIEND_IDS, (rs, rowNum) -> makeUser(rs), userId);
+        return jdbcTemplate.query(FIND_FRIENDS_QUERY, (rs, rowNum) -> makeUser(rs), userId);
     }
 }

@@ -3,14 +3,15 @@ package ru.yandex.practicum.filmorate.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
-import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -26,9 +28,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-public class UserControllerTest {
+@AutoConfigureTestDatabase
+@ActiveProfiles("test")
+public class UserControllerTest implements TestJsons {
 
     private final static LocalDate BIRTHDAY = LocalDate.now().minusDays(1);
 
@@ -41,9 +45,8 @@ public class UserControllerTest {
     @Autowired
     private UserController userController;
 
-
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
+    @Sql(scripts = {"file:assets/scripts/restart.sql"})
     void shouldFindAllUsers() throws Exception {
         User user1 = new User("test@test.com", "test", "", BIRTHDAY);
         User user2 = new User("test@test.com", "test", null, BIRTHDAY);
@@ -60,8 +63,8 @@ public class UserControllerTest {
                 .andExpect(content().json(body));
     }
 
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
+    @Sql(scripts = {"file:assets/scripts/restart.sql"})
     void givenNewUserWithNullName_whenCreated_thenAddsUserWithNameEqualsLogin() throws Exception {
         //given
         String body = objectMapper.writeValueAsString(
@@ -87,9 +90,7 @@ public class UserControllerTest {
         this.mockMvc.perform(
                         post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException))
-                .andExpect(result -> assertEquals("Invalid email address",
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException));
     }
 
     @Test
@@ -126,9 +127,8 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 //then
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException))
-                .andExpect(result -> assertEquals("Invalid login",
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException));
     }
 
     @Test
@@ -184,12 +184,12 @@ public class UserControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(result ->
                         assertTrue(result.getResolvedException() instanceof NoSuchUserException))
-                .andExpect(result -> assertEquals("No user with such ID",
+                .andExpect(result -> assertEquals("No user with such ID: 10",
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
 
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void createsAndUpdatesUser() throws Exception {
         User user = new User("email@email.com", "login", "name", BIRTHDAY);
         userController.createUser(user);
@@ -199,5 +199,73 @@ public class UserControllerTest {
                         put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(body));
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void user3shouldFriendUser1ThenShouldFindUser1AsFriend() throws Exception {
+        this.mockMvc.perform(put("/users/3/friends/1"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(get("/users/3/friends"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(FRIEND));
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void user2shouldUnfriendUser1ThenShouldFindNoFriends() throws Exception {
+        this.mockMvc.perform(delete("/users/2/friends/1"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(get("/users/2/friends"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void user2shouldFriendUser3ThenShouldFindCommonFriend3WithUser1() throws Exception {
+        this.mockMvc.perform(put("/users/2/friends/3"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(put("/users/3/friends/1"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(get("/users/2/friends/common/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(
+                        "[{\"id\":3," +
+                                "\"email\":\"email3@test.com\"," +
+                                "\"login\":\"login3\"," +
+                                "\"name\":\"name3\"," +
+                                "\"birthday\":\"2022-10-01\"," +
+                                "\"friends\":[{" +
+                                    "\"id\":1," +
+                                    "\"email\":\"email1@test.com\"," +
+                                    "\"login\":\"login1\"," +
+                                    "\"name\":\"name1\"," +
+                                    "\"birthday\":\"2022-10-01\"," +
+                                    "\"friends\":[]}]}]")
+                );
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void whenAddingFriendThatIsAlreadyFriendShouldThrowBadArgument() throws Exception {
+        this.mockMvc.perform(put("/users/1/friends/2"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void whenAddingFriendThatIsUnknownShouldThrowNoSuchUser() throws Exception {
+        this.mockMvc.perform(put("/users/1/friends/5"))
+                .andExpect(status().isNotFound());
+        this.mockMvc.perform(put("/users/5/friends/1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void tryToAddSelfAsFriend() throws Exception {
+        this.mockMvc.perform(put("/users/1/friends/1"))
+                .andExpect(status().isNotFound());
     }
 }

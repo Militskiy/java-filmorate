@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,10 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.validators.ValidationSequence;
 import ru.yandex.practicum.filmorate.services.FilmService;
 
 
-import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import java.util.Collection;
 
@@ -33,7 +34,7 @@ public class FilmController {
 
     @GetMapping("/{id}")
     public Film findFilm(@PathVariable @Min(1) Integer id) {
-        return filmService.findFilm(id);
+        return filmService.findFilmById(id);
     }
 
     @GetMapping("/popular")
@@ -44,28 +45,28 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film createFilm(@Valid @RequestBody Film film) {
+    public Film createFilm(@Validated(ValidationSequence.class) @RequestBody Film film) {
         return filmService.createFilm(film);
     }
 
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film film) {
+    public Film updateFilm(@Validated(ValidationSequence.class) @RequestBody Film film) {
         return filmService.updateFilm(film);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Integer addLike(
+    public void addLike(
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId
     ) {
-        return filmService.addLike(id, userId);
+        filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Integer removeLike(
+    public void removeLike(
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId
     ) {
-        return filmService.removeLike(id, userId);
+        filmService.removeLike(id, userId);
     }
 }

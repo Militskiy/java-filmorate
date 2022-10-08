@@ -18,11 +18,13 @@ public class GenreDaoImpl implements GenreDao {
 
     @Override
     public Optional<Genre> findById(Integer genreId) {
+        log.debug("Listing genre with id: {}", genreId);
         return jdbcTemplate.query(FIND_GENRE_BY_ID, (rs, rowNum) -> makeGenre(rs), genreId).stream().findFirst();
     }
 
     @Override
     public Collection<Genre> findAll() {
+        log.debug("Listing all genres");
         return jdbcTemplate.query(FIND_ALL, (rs, rowNum) -> makeGenre(rs));
     }
 }

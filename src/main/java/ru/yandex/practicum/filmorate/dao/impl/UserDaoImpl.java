@@ -78,7 +78,7 @@ public class UserDaoImpl implements UserDao {
                     friendId, userId, userId, friendId,
                     friendId, userId, userId, friendId) > 0;
         } catch (DataAccessException e) {
-            throw new NoSuchUserException("No such users");
+            throw new NoSuchUserException("No such users or attempting to add self");
         }
     }
 
@@ -104,6 +104,5 @@ public class UserDaoImpl implements UserDao {
 
     private Collection<User> getFriends(Integer userId) {
         return jdbcTemplate.query(FIND_FRIEND_IDS, (rs, rowNum) -> makeUser(rs), userId);
-
     }
 }

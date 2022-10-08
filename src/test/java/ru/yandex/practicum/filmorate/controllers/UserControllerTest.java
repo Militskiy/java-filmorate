@@ -261,4 +261,11 @@ public class UserControllerTest implements TestJsons {
         this.mockMvc.perform(put("/users/5/friends/1"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void tryToAddSelfAsFriend() throws Exception {
+        this.mockMvc.perform(put("/users/1/friends/1"))
+                .andExpect(status().isNotFound());
+    }
 }

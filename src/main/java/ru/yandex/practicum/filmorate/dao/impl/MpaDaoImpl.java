@@ -21,6 +21,7 @@ public class MpaDaoImpl implements MpaDao {
 
     @Override
     public Optional<Mpa> findById(Integer mpaId) {
+        log.debug("Listing rating with id: {}", mpaId);
          return jdbcTemplate.query(FIND_MPA_BY_ID, (rs, rowNum) -> makeMpa(rs), mpaId).stream().findFirst();
     }
 

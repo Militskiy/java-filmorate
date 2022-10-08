@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS friends
     user_id   INTEGER REFERENCES users (user_id) ON DELETE CASCADE,
     friend_id INTEGER REFERENCES users (user_id) ON DELETE CASCADE,
     confirmed BOOLEAN NOT NULL DEFAULT FALSE
+    CONSTRAINT validation CHECK (user_id <> friends.friend_id)
 );
 
 CREATE TABLE IF NOT EXISTS genres

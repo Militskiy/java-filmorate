@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,16 +18,19 @@ import java.util.Collection;
 @RequestMapping("/mpa")
 @Slf4j
 @RequiredArgsConstructor
+@Tag(name = "MPA rating services")
 public class MpaController {
 
     private final MpaService mpaService;
 
     @GetMapping
+    @Operation(summary = "Get a list of all MPA ratings")
     public Collection<Mpa> findAll() {
         return mpaService.findAll();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get a specific MPA rating by its id")
     public Mpa findMpa(@PathVariable @Min(1) Integer id) {
         return mpaService.findById(id);
     }

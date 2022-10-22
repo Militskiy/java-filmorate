@@ -51,6 +51,9 @@ public class FilmDaoImpl implements FilmDao {
             });
             jdbcTemplate.update(sb.toString(), parameters);
         }
+        film.setMpa(getFilmRating(film.getId()));
+        film.getGenres().clear();
+        getFilmGenres(film.getId()).forEach(film::addGenre);
         return film;
     }
 

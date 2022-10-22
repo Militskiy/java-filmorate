@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,16 +18,19 @@ import java.util.Collection;
 @RequestMapping("/genres")
 @Slf4j
 @RequiredArgsConstructor
+@Tag(name = "Genre services")
 public class GenreController {
 
     private final GenreService genreService;
 
     @GetMapping
+    @Operation(summary = "Get a list of all genres")
     public Collection<Genre> findAll() {
         return genreService.findAll();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get a specific genre by its id")
     public Genre findGenre(@PathVariable @Min(1) Integer id) {
         return genreService.findById(id);
     }

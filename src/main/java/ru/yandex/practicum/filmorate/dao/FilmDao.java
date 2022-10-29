@@ -2,6 +2,8 @@ package ru.yandex.practicum.filmorate.dao;
 
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.Collection;
+
 public interface FilmDao extends Dao<Film> {
 
     String CREATE_FILM = "INSERT INTO FILMS (FILM_NAME, FILM_DESCRIPTION, RELEASE_DATE, DURATION, RATING_ID) " +
@@ -64,6 +66,21 @@ public interface FilmDao extends Dao<Film> {
                     "FROM FILMS WHERE " +
                     "FILM_ID = ?)";
 
+    String FIND_POPULAR_FILMS =
+            "SELECT F.FILM_ID,\n" +
+                    "       FILM_NAME,\n" +
+                    "       FILM_DESCRIPTION,\n" +
+                    "       RELEASE_DATE,\n" +
+                    "       DURATION,\n" +
+                    "       F.RATING_ID,\n" +
+                    "       RATING_NAME\n" +
+                    "FROM FILMS F\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
+                    "GROUP BY F.FILM_ID\n" +
+                    "ORDER BY COUNT(L.FILM_ID) DESC\n" +
+                    "LIMIT ?;";
+
     Film create(Film film);
 
     Film update(Film film);
@@ -71,4 +88,6 @@ public interface FilmDao extends Dao<Film> {
     void addLike(Integer filmId, Integer userId);
 
     int removeLike(Integer filmId, Integer userId);
+
+    Collection<Film> findPopularFilms(Integer count);
 }

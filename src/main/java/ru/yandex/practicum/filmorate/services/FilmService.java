@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -52,10 +51,7 @@ public class FilmService {
 
     public Collection<Film> findPopularFilms(Integer count) {
         log.debug("Listing {} popular films", count);
-        return filmStorage.findAll().stream()
-                .sorted((f1, f2) -> f2.getUserLikes().size() - f1.getUserLikes().size())
-                .limit(count)
-                .collect(Collectors.toList());
+        return filmStorage.findPopularFilms(count);
     }
 
     public Film findFilmById(Integer filmId) {

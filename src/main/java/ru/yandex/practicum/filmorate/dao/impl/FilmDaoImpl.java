@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Component("FilmDaoImpl")
@@ -88,26 +89,20 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public Optional<Film> findById(Integer filmId) {
-        Optional<Film> optionalFilm = jdbcTemplate.getJdbcTemplate()
-                .query(FIND_FILM, (rs, rowNum) -> makeFilm(rs), filmId)
-                .stream().findFirst();
-        if (optionalFilm.isPresent()) {
-            getFilmLikes(optionalFilm.get().getId()).forEach(optionalFilm.get()::addLike);
-            getFilmGenres(optionalFilm.get().getId()).forEach(optionalFilm.get()::addGenre);
-            return optionalFilm;
-        } else {
-            throw new NoSuchFilmException("No Film with such ID: " + filmId);
-        }
+        return jdbcTemplate.getJdbcTemplate().query(FIND_FILM, (rs, rowNum) -> makeFilm(rs), filmId)
+                .stream().peek(film -> {
+                    getFilmLikes(film.getId()).forEach(film::addLike);
+                    getFilmGenres(film.getId()).forEach(film::addGenre);
+                }).findAny();
     }
 
     @Override
     public Collection<Film> findAll() {
-        Collection<Film> result = jdbcTemplate.getJdbcTemplate().query(FIND_ALL, (rs, rowNum) -> makeFilm(rs));
-        result.forEach(film -> {
-            getFilmLikes(film.getId()).forEach(film::addLike);
-            getFilmGenres(film.getId()).forEach(film::addGenre);
-        });
-        return result;
+        return jdbcTemplate.getJdbcTemplate().query(FIND_ALL, (rs, rowNum) -> makeFilm(rs))
+                .stream().peek(film -> {
+                    getFilmLikes(film.getId()).forEach(film::addLike);
+                    getFilmGenres(film.getId()).forEach(film::addGenre);
+                }).collect(Collectors.toList());
     }
 
     @Override
@@ -126,6 +121,15 @@ public class FilmDaoImpl implements FilmDao {
         } catch (DataAccessException e) {
             throw new BadArgumentsException("No such users or already disliked");
         }
+    }
+
+    @Override
+    public Collection<Film> findPopularFilms(Integer count) {
+        return jdbcTemplate.getJdbcTemplate().query(FIND_POPULAR_FILMS, (rs, rowNum) -> makeFilm(rs), count)
+                .stream().peek(film -> {
+                    getFilmLikes(film.getId()).forEach(film::addLike);
+                    getFilmGenres(film.getId()).forEach(film::addGenre);
+                }).collect(Collectors.toList());
     }
 
     private Collection<User> getFilmLikes(Integer filmId) {

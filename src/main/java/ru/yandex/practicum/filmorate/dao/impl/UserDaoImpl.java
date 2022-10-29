@@ -16,6 +16,7 @@ import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component("UserDaoImpl")
 @AllArgsConstructor
@@ -26,23 +27,19 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public Collection<User> findAll() {
-        Collection<User> result = jdbcTemplate.query(FIND_ALL_QUERY, (rs, rowNum) -> makeUser(rs));
-        result.forEach(user -> getFriends(user.getId()).forEach(user::addFriend));
-        return result;
+        return jdbcTemplate.query(FIND_ALL_QUERY, (rs, rowNum) -> makeUser(rs))
+                .stream().peek(user -> getFriends(user.getId()).forEach(user::addFriend)).collect(Collectors.toList());
     }
 
     @Override
     public Optional<User> findById(Integer id) {
-        Optional<User> optionalUser =
-                jdbcTemplate.query(FIND_USER_QUERY, (rs, rowNum) -> makeUser(rs), id).stream().findFirst();
-        optionalUser.ifPresent(user -> getFriends(user.getId()).forEach(user::addFriend));
-        return optionalUser;
+        return jdbcTemplate.query(FIND_USER_QUERY, (rs, rowNum) -> makeUser(rs), id)
+                .stream().peek(user -> getFriends(user.getId()).forEach(user::addFriend)).findFirst();
     }
 
     @Override
     public User create(User user) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection
                     .prepareStatement(CREATE_USER_QUERY, new String[]{"user_id"});

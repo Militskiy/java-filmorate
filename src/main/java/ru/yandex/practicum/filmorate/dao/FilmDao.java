@@ -9,8 +9,8 @@ public interface FilmDao extends Dao<Film> {
     String CREATE_FILM = "INSERT INTO FILMS (FILM_NAME, FILM_DESCRIPTION, RELEASE_DATE, DURATION, RATING_ID) " +
             "VALUES (:filmName, :filmDescription, :releaseDate, :duration, :ratingId);";
 
-    String ADD_GENRE = "INSERT INTO GENRES_FILMS (FILM_ID, GENRE_ID) " +
-            "VALUES (:filmId, :genreId";
+    String FILM_GENRE_UPDATE = "INSERT INTO GENRES_FILMS (FILM_ID, GENRE_ID) VALUES (?, ?)";
+
     String DELETE_GENRES_QUERY = "DELETE FROM GENRES_FILMS WHERE FILM_ID = :filmId;\n";
 
     String UPDATE_FILM_QUERY =
@@ -58,13 +58,6 @@ public interface FilmDao extends Dao<Film> {
                     "(SELECT GENRE_ID " +
                     "FROM GENRES_FILMS " +
                     "WHERE FILM_ID = ?)";
-    String GET_FILM_RATING =
-            "SELECT * " +
-                    "FROM RATINGS " +
-                    "WHERE RATING_ID IN " +
-                    "(SELECT RATING_ID " +
-                    "FROM FILMS WHERE " +
-                    "FILM_ID = ?)";
 
     String FIND_POPULAR_FILMS =
             "SELECT F.FILM_ID,\n" +
@@ -87,7 +80,7 @@ public interface FilmDao extends Dao<Film> {
 
     void addLike(Integer filmId, Integer userId);
 
-    int removeLike(Integer filmId, Integer userId);
+    void removeLike(Integer filmId, Integer userId);
 
     Collection<Film> findPopularFilms(Integer count);
 }

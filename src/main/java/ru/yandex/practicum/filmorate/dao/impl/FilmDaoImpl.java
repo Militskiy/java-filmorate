@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.dao.impl;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -12,17 +13,20 @@ import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchGenreException;
+import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -31,6 +35,7 @@ import java.util.stream.Collectors;
 public class FilmDaoImpl implements FilmDao {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final UserDaoImpl userStorage;
 
     @Override
     public Film create(Film film) {
@@ -43,19 +48,13 @@ public class FilmDaoImpl implements FilmDao {
         int id = Objects.requireNonNull(keyHolder.getKey()).intValue();
         film.setId(id);
         if (film.getGenres().size() > 0) {
-            StringBuilder sb = new StringBuilder();
-            film.getGenres().forEach(genre -> {
-                parameters
-                        .addValue("filmId", id)
-                        .addValue("genreId" + genre.getId(), genre.getId());
-                sb.append(ADD_GENRE).append(genre.getId()).append(");\n");
-            });
-            jdbcTemplate.update(sb.toString(), parameters);
+            try {
+                filmGenreUpdate(film);
+            } catch (DataAccessException e) {
+                throw new NoSuchGenreException("No such genre");
+            }
         }
-        film.setMpa(getFilmRating(film.getId()));
-        film.getGenres().clear();
-        getFilmGenres(film.getId()).forEach(film::addGenre);
-        return film;
+        return findById(id);
     }
 
     @Override
@@ -64,36 +63,28 @@ public class FilmDaoImpl implements FilmDao {
         getFilmParameters(parameters, film);
         if (jdbcTemplate.update(UPDATE_FILM_QUERY, parameters) == 1) {
             if (film.getGenres().size() > 0) {
-                StringBuilder sb = new StringBuilder(DELETE_GENRES_QUERY);
-                film.getGenres().forEach(genre -> {
-                    parameters
-                            .addValue("genreId" + genre.getId(), genre.getId());
-                    sb.append(ADD_GENRE).append(genre.getId()).append(");\n");
-                });
                 try {
-                    jdbcTemplate.update(sb.toString(), parameters);
+                    jdbcTemplate.update(DELETE_GENRES_QUERY, parameters);
+                    filmGenreUpdate(film);
                 } catch (DataAccessException e) {
                     throw new NoSuchGenreException("No such genre");
                 }
-                film.getGenres().clear();
-                getFilmGenres(film.getId()).forEach(film::addGenre);
             } else {
                 jdbcTemplate.update(DELETE_GENRES_QUERY, parameters);
             }
-            film.setMpa(getFilmRating(film.getId()));
-            return film;
+            return findById(film.getId());
         } else {
             throw new NoSuchFilmException("No Film with such ID: " + film.getId());
         }
     }
 
     @Override
-    public Optional<Film> findById(Integer filmId) {
+    public Film findById(Integer filmId) {
         return jdbcTemplate.getJdbcTemplate().query(FIND_FILM, (rs, rowNum) -> makeFilm(rs), filmId)
                 .stream().peek(film -> {
                     getFilmLikes(film.getId()).forEach(film::addLike);
                     getFilmGenres(film.getId()).forEach(film::addGenre);
-                }).findAny();
+                }).findAny().orElseThrow(() -> new NoSuchFilmException("No Film with such ID: " + filmId));
     }
 
     @Override
@@ -107,19 +98,25 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public void addLike(Integer filmId, Integer userId) {
-        try {
+        assert userStorage.findById(userId) != null;
+        if (findById(filmId).getUserLikes()
+                .stream()
+                .noneMatch(user -> user.getId() == userId)) {
             jdbcTemplate.getJdbcTemplate().update(ADD_LIKE, userId, filmId);
-        } catch (DataAccessException e) {
-            throw new BadArgumentsException("No such users or already liked");
+        } else {
+            throw new BadArgumentsException("Film already liked");
         }
     }
 
     @Override
-    public int removeLike(Integer filmId, Integer userId) {
-        try {
-            return jdbcTemplate.getJdbcTemplate().update(DELETE_LIKE, filmId, userId);
-        } catch (DataAccessException e) {
-            throw new BadArgumentsException("No such users or already disliked");
+    public void removeLike(Integer filmId, Integer userId) {
+        assert userStorage.findById(userId) != null;
+        if (findById(filmId).getUserLikes()
+                .stream()
+                .anyMatch(user -> user.getId() == userId)) {
+            jdbcTemplate.getJdbcTemplate().update(DELETE_LIKE, filmId, userId);
+        } else {
+            throw new NoSuchUserException("Film not liked");
         }
     }
 
@@ -139,11 +136,6 @@ public class FilmDaoImpl implements FilmDao {
 
     private Collection<Genre> getFilmGenres(Integer filmId) {
         return jdbcTemplate.getJdbcTemplate().query(GET_FILM_GENRES, (rs, rowNum) -> makeGenre(rs), filmId);
-    }
-
-    private Mpa getFilmRating(Integer filmId) {
-        return jdbcTemplate.getJdbcTemplate()
-                .query(GET_FILM_RATING, (rs, rowNum) -> makeMpa(rs), filmId).stream().findFirst().orElse(null);
     }
 
     private void getFilmParameters(MapSqlParameterSource parameterSource, Film film) {
@@ -167,5 +159,21 @@ public class FilmDaoImpl implements FilmDao {
         int ratingId = rs.getInt("rating_id");
         String ratingName = rs.getString("rating_name");
         return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName));
+    }
+
+    private void filmGenreUpdate(Film film) {
+        List<Genre> filmGenres = new ArrayList<>(film.getGenres());
+        jdbcTemplate.getJdbcTemplate().batchUpdate(FILM_GENRE_UPDATE,
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ps.setInt(1, film.getId());
+                        ps.setInt(2, filmGenres.get(i).getId());
+                    }
+                    @Override
+                    public int getBatchSize() {
+                        return filmGenres.size();
+                    }
+                });
     }
 }

@@ -56,9 +56,9 @@ public class FilmControllerTest implements TestJsons {
         Film film1 = new Film("name", "1".repeat(200), TEST_DATE, 1, new Mpa(1, "G"));
         Film film2 = new Film("name", null, TEST_DATE, 1, new Mpa(1, "G"));
         Film film3 = new Film("name", "", TEST_DATE, 1, new Mpa(1, "G"));
-        filmController.createFilm(film1);
-        filmController.createFilm(film2);
-        filmController.createFilm(film3);
+        film1 = filmController.createFilm(film1);
+        film2 = filmController.createFilm(film2);
+        film3 = filmController.createFilm(film3);
         String listBody = objectMapper.writeValueAsString(List.of(film1, film2, film3));
         this.mockMvc.perform(
                         get("/films"))

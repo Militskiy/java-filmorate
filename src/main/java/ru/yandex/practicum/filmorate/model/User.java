@@ -11,7 +11,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import javax.validation.constraints.Pattern;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -47,5 +49,15 @@ public class User {
 
     public boolean addFriend(User user) {
         return friends.add(user);
+    }
+
+    public Map<String, Object> getMap() {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("user_id", this.id);
+        parameters.put("user_email", this.email);
+        parameters.put("user_login", this.login);
+        parameters.put("user_name", this.name);
+        parameters.put("birthday", this.birthday);
+        return parameters;
     }
 }

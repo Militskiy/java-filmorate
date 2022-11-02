@@ -52,10 +52,10 @@ public class UserControllerTest implements TestJsons {
         User user2 = new User("test@test.com", "test", null, BIRTHDAY);
         User user3 = new User("test@test.com", "test", " ", BIRTHDAY);
         User user4 = new User("test@test.com", "test", "name", BIRTHDAY);
-        userController.createUser(user1);
-        userController.createUser(user2);
-        userController.createUser(user3);
-        userController.createUser(user4);
+        user1 = userController.createUser(user1);
+        user2 = userController.createUser(user2);
+        user3 = userController.createUser(user3);
+        user4 = userController.createUser(user4);
         String body = objectMapper.writeValueAsString(List.of(user1, user2, user3, user4));
         this.mockMvc.perform(
                         get("/users"))
@@ -192,7 +192,7 @@ public class UserControllerTest implements TestJsons {
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void createsAndUpdatesUser() throws Exception {
         User user = new User("email@email.com", "login", "name", BIRTHDAY);
-        userController.createUser(user);
+        user = userController.createUser(user);
         User updatedUser = new User(user.getId(), "updated@updated.com", "login", "name", BIRTHDAY);
         String body = objectMapper.writeValueAsString(updatedUser);
         this.mockMvc.perform(

@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
-import java.util.NoSuchElementException;
 
 @Service
 @Slf4j
@@ -18,7 +17,6 @@ import java.util.NoSuchElementException;
 public class FilmService {
     @Qualifier("FilmDaoImpl")
     private final FilmDao filmStorage;
-    private final UserService userService;
 
     public Collection<Film> findAllFilms() {
         log.debug("Listing all films");
@@ -26,27 +24,21 @@ public class FilmService {
     }
 
     public Film createFilm(Film film) {
-        filmStorage.create(film);
         log.debug("Added new film {}", film);
-        return film;
+        return filmStorage.create(film);
     }
 
     // проверки в storage
     public Film updateFilm(Film film) {
-        filmStorage.update(film);
-        return film;
+        return filmStorage.update(film);
     }
 
     public void addLike(Integer filmId, Integer userId) throws NoSuchFilmException, NoSuchUserException {
-        userService.findUserById(userId);
-        findFilmById(filmId);
         filmStorage.addLike(filmId, userId);
     }
 
     public void removeLike(Integer filmId, Integer userId) throws NoSuchFilmException, NoSuchUserException {
-        if (filmStorage.removeLike(filmId, userId) != 1) {
-         throw new NoSuchElementException("Film or user not found");
-        }
+        filmStorage.removeLike(filmId, userId);
     }
 
     public Collection<Film> findPopularFilms(Integer count) {
@@ -55,8 +47,6 @@ public class FilmService {
     }
 
     public Film findFilmById(Integer filmId) {
-        return filmStorage.findById(filmId).orElseThrow(
-                () -> new NoSuchFilmException("No Film with such ID: " + filmId)
-        );
+        return filmStorage.findById(filmId);
     }
 }

@@ -13,9 +13,7 @@ public interface UserDao extends Dao<User> {
             "SELECT * " +
                     "FROM USERS " +
                     "WHERE USER_ID = ?";
-    String CREATE_USER_QUERY =
-            "INSERT INTO USERS (USER_EMAIL, USER_LOGIN, USER_NAME, BIRTHDAY) " +
-                    "VALUES (?, ?, ?, ?)";
+
     String UPDATE_USER_QUERY =
             "UPDATE USERS " +
                     "SET USER_EMAIL = ?, USER_LOGIN = ?, USER_NAME = ?, BIRTHDAY = ? " +
@@ -34,7 +32,7 @@ public interface UserDao extends Dao<User> {
     String FIND_COMMON_FRIENDS_QUERY =
             "SELECT * " +
                     "FROM USERS " +
-                    "WHERE USER_ID = ? OR USER_ID = ? OR USER_ID IN " +
+                    "WHERE USER_ID IN " +
                     "(SELECT FRIEND_ID " +
                     "FROM FRIENDS " +
                     "WHERE USER_ID = ? OR USER_ID = ? " +
@@ -66,5 +64,5 @@ public interface UserDao extends Dao<User> {
 
     User create(User user);
 
-    int update(User user);
+    User update(User user);
 }

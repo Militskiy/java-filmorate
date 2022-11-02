@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.MpaDao;
+import ru.yandex.practicum.filmorate.exceptions.NoSuchMpaException;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.Collection;
-import java.util.Optional;
 
 @AllArgsConstructor
 @Component
@@ -20,9 +20,12 @@ public class MpaDaoImpl implements MpaDao {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public Optional<Mpa> findById(Integer mpaId) {
+    public Mpa findById(Integer mpaId) {
         log.debug("Listing rating with id: {}", mpaId);
-         return jdbcTemplate.query(FIND_MPA_BY_ID, (rs, rowNum) -> makeMpa(rs), mpaId).stream().findFirst();
+         return jdbcTemplate.query(FIND_MPA_BY_ID, (rs, rowNum) -> makeMpa(rs), mpaId)
+                 .stream()
+                 .findAny()
+                 .orElseThrow(() -> new NoSuchMpaException("There is no rating with ID: " + mpaId));
     }
 
     @Override

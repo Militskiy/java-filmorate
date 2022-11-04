@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.dao;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface FilmDao extends Dao<Film> {
 
@@ -11,7 +12,11 @@ public interface FilmDao extends Dao<Film> {
 
     String FILM_GENRE_UPDATE = "INSERT INTO GENRES_FILMS (FILM_ID, GENRE_ID) VALUES (?, ?)";
 
+    String FILM_DIRECTOR_UPDATE = "INSERT INTO DIRECTORS_FILMS (FILM_ID, DIRECTOR_ID) VALUES (?, ?)";
+
     String DELETE_GENRES_QUERY = "DELETE FROM GENRES_FILMS WHERE FILM_ID = :filmId;\n";
+
+    String DELETE_DIRECTORS_QUERY = "DELETE FROM DIRECTORS_FILMS WHERE FILM_ID = :filmId;\n";
 
     String UPDATE_FILM_QUERY =
             "UPDATE FILMS\n" +
@@ -59,6 +64,14 @@ public interface FilmDao extends Dao<Film> {
                     "FROM GENRES_FILMS " +
                     "WHERE FILM_ID = ?)";
 
+    String GET_FILM_DIRECTORS =
+            "SELECT * " +
+                    "FROM DIRECTORS " +
+                    "WHERE DIRECTOR_ID IN " +
+                    "(SELECT DIRECTOR_ID " +
+                    "FROM DIRECTORS_FILMS " +
+                    "WHERE FILM_ID = ?)";
+
     String FIND_POPULAR_FILMS =
             "SELECT F.FILM_ID,\n" +
                     "       FILM_NAME,\n" +
@@ -74,7 +87,40 @@ public interface FilmDao extends Dao<Film> {
                     "ORDER BY COUNT(L.FILM_ID) DESC\n" +
                     "LIMIT ?;";
 
+
     String DELETE_FILM = "DELETE FROM FILMS WHERE FILM_ID = ?";
+
+    String GET_DIRECTOR_FILMS_YEAR_SORTED =
+            "SELECT F.FILM_ID,\n" +
+                    "       FILM_NAME,\n" +
+                    "       FILM_DESCRIPTION,\n" +
+                    "       RELEASE_DATE,\n" +
+                    "       DURATION,\n" +
+                    "       F.RATING_ID,\n" +
+                    "       RATING_NAME\n" +
+                    "FROM DIRECTORS_FILMS DF\n" +
+                    "LEFT JOIN FILMS F on F.FILM_ID = DF.FILM_ID\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN DIRECTORS D on D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
+                    "WHERE DF.DIRECTOR_ID = ?\n" +
+                    "ORDER BY F.RELEASE_DATE ASC\n";
+
+    String GET_DIRECTOR_FILMS_LIKES_SORTED =
+            "SELECT F.FILM_ID,\n" +
+                    "       FILM_NAME,\n" +
+                    "       FILM_DESCRIPTION,\n" +
+                    "       RELEASE_DATE,\n" +
+                    "       DURATION,\n" +
+                    "       F.RATING_ID,\n" +
+                    "       RATING_NAME\n" +
+                    "FROM DIRECTORS_FILMS DF\n" +
+                    "LEFT JOIN FILMS F on F.FILM_ID = DF.FILM_ID\n" +
+                    "LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN DIRECTORS D on D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
+                    "WHERE DF.DIRECTOR_ID = ?\n" +
+                    "GROUP BY F.FILM_ID\n" +
+                    "ORDER BY COUNT(L.FILM_ID) DESC\n";
 
     Film create(Film film);
 
@@ -87,4 +133,6 @@ public interface FilmDao extends Dao<Film> {
     void removeLike(Integer filmId, Integer userId);
 
     Collection<Film> findPopularFilms(Integer count);
+
+    List<Film> findDirectorFilms(int directorId, String sortBy);
 }

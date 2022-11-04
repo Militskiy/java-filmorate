@@ -20,6 +20,7 @@ import ru.yandex.practicum.filmorate.validators.ValidationSequence;
 
 import javax.validation.constraints.Min;
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping("/films")
@@ -81,5 +82,12 @@ public class FilmController {
             @PathVariable @Min(1) Integer userId
     ) {
         filmService.removeLike(id, userId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    @Operation(summary = "Get all films by director id")
+    public List<Film> getDirectorFilmsSorted(@PathVariable int directorId, @RequestParam(defaultValue = "year") String sortBy) {
+        log.debug("Getting all films by director");
+        return filmService.getDirectorFilmsSorted(directorId, sortBy);
     }
 }

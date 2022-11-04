@@ -53,6 +53,13 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNoSuchDirectorException(final NoSuchDirectorException e) {
+        log.debug(e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNoSuchElementException(final NoSuchElementException e) {
         log.debug(e.getMessage());
         return new ErrorResponse(e.getMessage());

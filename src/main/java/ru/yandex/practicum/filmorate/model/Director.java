@@ -4,8 +4,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import ru.yandex.practicum.filmorate.validators.NullCheckGroup;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotBlank;
 
 @Data
 @AllArgsConstructor
@@ -14,7 +15,7 @@ public class Director {
     @EqualsAndHashCode.Include
     @Schema(example = "1", required = true)
     private int id;
-    @NotNull
+    @NotBlank(message = "Name must not be blank", groups = NullCheckGroup.class)
     @Schema(example = "Test director", required = true)
     private String name;
 

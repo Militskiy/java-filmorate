@@ -9,22 +9,18 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dao.DirectorDAO;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
-import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
-import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
-import ru.yandex.practicum.filmorate.exceptions.NoSuchGenreException;
-import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
+import ru.yandex.practicum.filmorate.exceptions.*;
 import ru.yandex.practicum.filmorate.model.*;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @AllArgsConstructor
 @Component("FilmDaoImpl")
@@ -33,6 +29,7 @@ public class FilmDaoImpl implements FilmDao {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final UserDaoImpl userStorage;
+    private final DirectorDAO directorStorage;
 
     @Override
     public Film create(Film film) {
@@ -49,6 +46,13 @@ public class FilmDaoImpl implements FilmDao {
                 filmGenreUpdate(film);
             } catch (DataAccessException e) {
                 throw new NoSuchGenreException("No such genre");
+            }
+        }
+        if (film.getDirectors().size() > 0) {
+            try {
+                filmDirectorUpdate(film);
+            } catch (DataAccessException e) {
+                throw new NoSuchDirectorException("No such director");
             }
         }
         return findById(id);
@@ -69,6 +73,16 @@ public class FilmDaoImpl implements FilmDao {
             } else {
                 jdbcTemplate.update(DELETE_GENRES_QUERY, parameters);
             }
+            if (film.getDirectors().size() > 0) {
+                try {
+                    jdbcTemplate.update(DELETE_DIRECTORS_QUERY, parameters);
+                    filmDirectorUpdate(film);
+                } catch (DataAccessException e) {
+                    throw new NoSuchDirectorException("No such director");
+                }
+            } else {
+                jdbcTemplate.update(DELETE_DIRECTORS_QUERY, parameters);
+            }
             return findById(film.getId());
         } else {
             throw new NoSuchFilmException("No Film with such ID: " + film.getId());
@@ -81,6 +95,7 @@ public class FilmDaoImpl implements FilmDao {
                 .stream().peek(film -> {
                     getFilmLikes(film.getId()).forEach(film::addLike);
                     getFilmGenres(film.getId()).forEach(film::addGenre);
+                    getFilmDirectors(film.getId()).forEach(film::addDirector);
                 }).findAny().orElseThrow(() -> new NoSuchFilmException("No Film with such ID: " + filmId));
     }
 
@@ -90,6 +105,7 @@ public class FilmDaoImpl implements FilmDao {
                 .stream().peek(film -> {
                     getFilmLikes(film.getId()).forEach(film::addLike);
                     getFilmGenres(film.getId()).forEach(film::addGenre);
+                    getFilmDirectors(film.getId()).forEach(film::addDirector);
                 }).collect(Collectors.toList());
     }
 
@@ -123,13 +139,25 @@ public class FilmDaoImpl implements FilmDao {
                 .stream().peek(film -> {
                     getFilmLikes(film.getId()).forEach(film::addLike);
                     getFilmGenres(film.getId()).forEach(film::addGenre);
+                    getFilmDirectors(film.getId()).forEach(film::addDirector);
                 }).collect(Collectors.toList());
     }
 
     @Override
     public List<Film> findDirectorFilms(int directorId, String sortBy) {
+        directorStorage.findById(directorId)
+                .orElseThrow(() -> new NoSuchDirectorException(String.format("Director with id = %d not found", directorId)));
+
         String sqlQuery = sortBy.equals("likes")?GET_DIRECTOR_FILMS_LIKES_SORTED:GET_DIRECTOR_FILMS_YEAR_SORTED;
-        return jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs), directorId);
+
+        try (Stream<Film> stream
+                     = jdbcTemplate.getJdbcTemplate().queryForStream(sqlQuery, (rs, rowNum) -> makeFilm(rs), directorId)) {
+            return stream.peek(film -> {
+                getFilmLikes(film.getId()).forEach(film::addLike);
+                getFilmGenres(film.getId()).forEach(film::addGenre);
+                getFilmDirectors(film.getId()).forEach(film::addDirector);
+            }).collect(Collectors.toList());
+        }
     }
 
     private Collection<User> getFilmLikes(Integer filmId) {
@@ -141,14 +169,17 @@ public class FilmDaoImpl implements FilmDao {
         return jdbcTemplate.getJdbcTemplate().query(GET_FILM_GENRES, (rs, rowNum) -> makeGenre(rs), filmId);
     }
 
+    private Collection<Director> getFilmDirectors(Integer filmId) {
+        return jdbcTemplate.getJdbcTemplate().query(GET_FILM_DIRECTORS, (rs, rowNum) -> makeDirector(rs), filmId);
+    }
+
     private void getFilmParameters(MapSqlParameterSource parameterSource, Film film) {
         parameterSource
                 .addValue("filmName", film.getName())
                 .addValue("filmDescription", film.getDescription())
                 .addValue("releaseDate", film.getReleaseDate())
                 .addValue("duration", film.getDuration())
-                .addValue("ratingId", film.getMpa().getId())
-                .addValue("directorId", film.getDirector().getId());
+                .addValue("ratingId", film.getMpa().getId());
         if (film.getId() > 0) {
             parameterSource.addValue("filmId", film.getId());
         }
@@ -162,10 +193,7 @@ public class FilmDaoImpl implements FilmDao {
         int duration = rs.getInt("duration");
         int ratingId = rs.getInt("rating_id");
         String ratingName = rs.getString("rating_name");
-        int directorId = rs.getInt("director_id");
-        String directorName = rs.getString("director_name");
-        return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName),
-                new Director(directorId, directorName));
+        return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName));
     }
 
     private void filmGenreUpdate(Film film) {
@@ -180,6 +208,22 @@ public class FilmDaoImpl implements FilmDao {
                     @Override
                     public int getBatchSize() {
                         return filmGenres.size();
+                    }
+                });
+    }
+
+    private void filmDirectorUpdate(Film film) {
+        List<Director> directors = new ArrayList<>(film.getDirectors());
+        jdbcTemplate.getJdbcTemplate().batchUpdate(FILM_DIRECTOR_UPDATE,
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ps.setInt(1, film.getId());
+                        ps.setInt(2, directors.get(i).getId());
+                    }
+                    @Override
+                    public int getBatchSize() {
+                        return directors.size();
                     }
                 });
     }

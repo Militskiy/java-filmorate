@@ -30,7 +30,6 @@ public class Film {
     @Schema(example = "A film to test application")
     private String description;
     @NotNull(message = "Release date must not be null", groups = NullCheckGroup.class)
-    @PastOrPresent(message = "Release date cannot be in the future")
     @FilmDateConstraint
     @Schema(example = "2000-10-22")
     private LocalDate releaseDate;
@@ -44,16 +43,14 @@ public class Film {
     private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
     @Schema(example = "[]")
     private final Set<User> userLikes = new HashSet<>();
-    @Schema(example = "{\"id\": 1}")
-    private Director director;
+    private final Set<Director> directors = new HashSet<>();
 
-    public Film(String name, String description, LocalDate releaseDate, long duration, Mpa mpa, Director director) {
+    public Film(String name, String description, LocalDate releaseDate, long duration, Mpa mpa) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
         this.mpa = mpa;
-        this.director = director;
     }
 
     public boolean addLike(User user) {
@@ -65,5 +62,12 @@ public class Film {
     }
     public boolean removeGenre(Genre genre) {
         return genres.remove(genre);
+    }
+
+    public boolean addDirector(Director director) {
+        return directors.add(director);
+    }
+    public boolean removeDirector(Director director) {
+        return directors.remove(director);
     }
 }

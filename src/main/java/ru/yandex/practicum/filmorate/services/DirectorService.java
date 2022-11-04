@@ -20,7 +20,7 @@ public class DirectorService {
 
     public Director getDirectorById(int id) {
         return directorStorage.findById(id)
-                .orElseThrow(() -> new NoSuchDirectorException(String.format("Директор с id = %d не найден", id)));
+                .orElseThrow(() -> new NoSuchDirectorException(String.format("Director with id = %d not found", id)));
     }
 
     public Director createDirector(Director director) {
@@ -30,14 +30,14 @@ public class DirectorService {
     public Director updateDirector(Director director) {
         int id = director.getId();
         directorStorage.findById(id)
-                .orElseThrow(() -> new NoSuchDirectorException(String.format("Директор с id = %d не найден", id)));
+                .orElseThrow(() -> new NoSuchDirectorException(String.format("Director with id = %d not found", id)));
 
         return directorStorage.update(director);
     }
 
     public void deleteDirector(int id) {
         directorStorage.findById(id)
-                .orElseThrow(() -> new NoSuchDirectorException(String.format("Директор с id = %d не найден", id)));
+                .orElseThrow(() -> new NoSuchDirectorException(String.format("Director with id = %d not found", id)));
         directorStorage.delete(id);
     }
 }

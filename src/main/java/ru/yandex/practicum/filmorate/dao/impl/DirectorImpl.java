@@ -46,7 +46,7 @@ public class DirectorImpl implements DirectorDAO {
             return stmt;
         }, keyHolder);
         int id = Objects.requireNonNull(keyHolder.getKey()).intValue();
-        return findById(id).orElseThrow(() -> new NoSuchDirectorException(String.format("Директор с id = %d не найден", id)));
+        return findById(id).orElseThrow(() -> new NoSuchDirectorException(String.format("Director with id = %d not found", id)));
     }
 
     @Override
@@ -56,7 +56,7 @@ public class DirectorImpl implements DirectorDAO {
         jdbcTemplate.update(UPDATE_QUERY,
                 director.getName(),
                 id);
-        return findById(id).orElseThrow(() -> new NoSuchDirectorException(String.format("Директор с id = %d не найден", id)));
+        return findById(id).orElseThrow(() -> new NoSuchDirectorException(String.format("Director with id = %d not found", id)));
     }
 
     @Override

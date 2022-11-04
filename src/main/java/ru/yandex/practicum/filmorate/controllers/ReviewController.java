@@ -37,16 +37,19 @@ public class ReviewController {
     public Collection<Review> findAllReviews(
             @RequestParam @Min(1) Optional<Integer> filmId,
             @RequestParam(defaultValue = "10", required = false) @Min(1) Integer count
-            ){
+    ) {
         if (filmId.isPresent()) {
+            log.debug("Getting top {} reviews for film with id: {}", count, filmId.get());
             return reviewService.findAllReviewsForFilm(filmId.get(), count);
         }
+        log.debug("Getting all reviews");
         return reviewService.findAllReviews();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get specific review by ID")
     public Review findReview(@PathVariable @Min(1) Integer id) {
+        log.debug("Getting review with id: {}", id);
         return reviewService.findById(id);
     }
 
@@ -54,12 +57,14 @@ public class ReviewController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Add review")
     public Review createReview(@Valid @RequestBody Review review) {
+        log.debug("Creating review for film with id: {}", review.getFilmId());
         return reviewService.createReview(review);
     }
 
     @PutMapping
     @Operation(summary = "Update review")
     public Review updateReview(@Valid @RequestBody Review review) {
+        log.debug("Updating review with id: {} for film with id: {}", review.getReviewId(), review.getFilmId());
         return reviewService.updateReview(review);
     }
 
@@ -69,6 +74,7 @@ public class ReviewController {
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId
     ) {
+        log.debug("Adding like to review with id: {} from user with id: {}", id, userId);
         return reviewService.addLike(id, userId);
     }
 
@@ -78,12 +84,14 @@ public class ReviewController {
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId
     ) {
+        log.debug("Adding dislike to review with id: {} from user with id: {}", id, userId);
         return reviewService.addDislike(id, userId);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete specific review by ID")
     public void deleteReview(@PathVariable @Min(1) Integer id) {
+        log.debug("deleting review with id: {}", id);
         reviewService.deleteReview(id);
     }
 
@@ -93,6 +101,7 @@ public class ReviewController {
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId
     ) {
+        log.debug("Deleting like from review with id: {} by user with id: {}", id, userId);
         reviewService.deleteLike(id, userId);
     }
 
@@ -102,6 +111,7 @@ public class ReviewController {
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId
     ) {
+        log.debug("Deleting dislike from review with id: {} by user with id: {}", id, userId);
         reviewService.deleteDislike(id, userId);
     }
- }
+}

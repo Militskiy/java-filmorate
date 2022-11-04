@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.services;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.ReviewDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
@@ -11,7 +10,6 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class ReviewService {
 

@@ -1,11 +1,10 @@
 package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dao.ReviewDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchReviewException;
@@ -17,8 +16,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 @AllArgsConstructor
-@Component
-@Slf4j
+@Repository
 public class ReviewDaoImpl implements ReviewDao {
 
     private final JdbcTemplate jdbcTemplate;

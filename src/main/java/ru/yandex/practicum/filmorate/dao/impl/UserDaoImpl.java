@@ -56,8 +56,11 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public int removeUser(Integer userId) {
-        return jdbcTemplate.update(DELETE_USER, userId);
+    public void removeUser(Integer userId) {
+        int result = jdbcTemplate.update(DELETE_USER, userId);
+        if (result != 1) {
+            throw new NoSuchUserException("User was not found");
+        }
     }
 
     @Override

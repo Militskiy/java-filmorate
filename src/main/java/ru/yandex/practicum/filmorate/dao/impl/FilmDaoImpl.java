@@ -97,8 +97,11 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
-    public int removeFilm(Integer filmId) {
-        return jdbcTemplate.getJdbcTemplate().update(DELETE_FILM, filmId);
+    public void removeFilm(Integer filmId) {
+        int result = jdbcTemplate.getJdbcTemplate().update(DELETE_FILM, filmId);
+        if (result != 1) {
+            throw new NoSuchFilmException("Film was not found");
+        }
     }
 
     @Override

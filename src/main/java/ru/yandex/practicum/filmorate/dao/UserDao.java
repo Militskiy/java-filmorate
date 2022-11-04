@@ -62,7 +62,7 @@ public interface UserDao extends Dao<User> {
 
     Collection<User> findCommonFriends(Integer userId, Integer otherId);
 
-    int removeUser(Integer userId);
+    void removeUser(Integer userId);
 
     boolean createFriend(Integer userId, Integer friendId);
 

@@ -80,7 +80,7 @@ public interface FilmDao extends Dao<Film> {
 
     Film update(Film film);
 
-    int removeFilm(Integer filmId);
+    void removeFilm(Integer filmId);
 
     void addLike(Integer filmId, Integer userId);
 

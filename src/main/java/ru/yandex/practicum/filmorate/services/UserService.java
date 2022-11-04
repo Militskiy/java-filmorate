@@ -36,9 +36,9 @@ public class UserService {
         return userStorage.update(user);
     }
 
-    public int removeUser(Integer userId) {
+    public void removeUser(Integer userId) {
         log.info("User deleted");
-        return userStorage.removeUser(userId);
+        userStorage.removeUser(userId);
     }
 
     public void addFriends(Integer userId, Integer friendId) {

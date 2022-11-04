@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -48,5 +49,9 @@ public class FilmService {
 
     public Film findFilmById(Integer filmId) {
         return filmStorage.findById(filmId);
+    }
+
+    public List<Film> getDirectorFilmsSorted(int directorId, String sortBy) {
+        return filmStorage.findDirectorFilms(directorId, sortBy);
     }
 }

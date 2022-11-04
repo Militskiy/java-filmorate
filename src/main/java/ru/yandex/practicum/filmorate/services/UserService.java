@@ -36,6 +36,11 @@ public class UserService {
         return userStorage.update(user);
     }
 
+    public int removeUser(Integer userId) {
+        log.info("User deleted");
+        return userStorage.removeUser(userId);
+    }
+
     public void addFriends(Integer userId, Integer friendId) {
         if (userStorage.createFriend(userId, friendId)) {
             log.debug("Creating friend link between users with ids: {} and {}", userId, friendId);

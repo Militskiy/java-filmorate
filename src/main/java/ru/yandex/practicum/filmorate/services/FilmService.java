@@ -33,6 +33,11 @@ public class FilmService {
         return filmStorage.update(film);
     }
 
+    public int removeFilm(Integer filmId) {
+        log.info("Film deleted");
+        return filmStorage.removeFilm(filmId);
+    }
+
     public void addLike(Integer filmId, Integer userId) throws NoSuchFilmException, NoSuchUserException {
         filmStorage.addLike(filmId, userId);
     }

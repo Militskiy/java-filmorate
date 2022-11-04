@@ -97,6 +97,11 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
+    public int removeFilm(Integer filmId) {
+        return jdbcTemplate.getJdbcTemplate().update(DELETE_FILM, filmId);
+    }
+
+    @Override
     public void addLike(Integer filmId, Integer userId) {
         assert userStorage.findById(userId) != null;
         if (findById(filmId).getUserLikes()

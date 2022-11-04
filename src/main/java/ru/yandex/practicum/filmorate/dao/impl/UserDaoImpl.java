@@ -56,6 +56,11 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
+    public int removeUser(Integer userId) {
+        return jdbcTemplate.update(DELETE_USER, userId);
+    }
+
+    @Override
     public boolean createFriend(Integer userId, Integer friendId) {
         try {
             return jdbcTemplate.update(CREATE_FRIEND_QUERY,

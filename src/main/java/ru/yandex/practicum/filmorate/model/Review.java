@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -18,17 +19,19 @@ public class Review {
     @NotNull
     @Schema(type = "string", example = "A good review")
     private String content;
+    @NotNull
     @Schema(type = "boolean", example = "true")
     @JsonProperty(value = "isPositive")
-    private boolean isPositive;
+    private Boolean isPositive;
     @NotNull
     @Schema(type = "integer", example = "1")
-    private int userId;
+    private Integer userId;
     @NotNull
     @Schema(type = "integer", example = "1")
-    private int filmId;
+    private Integer filmId;
     private int useful;
 
+    @JsonIgnore
     public Map<String, Object> toMap() {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("content", this.content);

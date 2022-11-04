@@ -43,7 +43,7 @@ public class ReviewService {
 
     public Review addLike(Integer id, Integer userId) {
         Review review = reviewStorage.findById(id);
-        if (review.getUserId() != userId) {
+        if (review.getUserId() != userId.intValue()) {
             if (reviewStorage.findDislikedReviewsByUser(userId).stream().anyMatch(r -> r.getReviewId() == id)) {
                 reviewStorage.deleteDislike(id, userId);
             }
@@ -55,19 +55,19 @@ public class ReviewService {
 
     public Review addDislike(Integer id, Integer userId) {
         Review review = reviewStorage.findById(id);
-        if (review.getUserId() != userId) {
+        if (review.getUserId() != userId.intValue()) {
             if (reviewStorage.findLikedReviewsByUser(userId).stream().anyMatch(r -> r.getReviewId() == id)) {
                 reviewStorage.deleteLike(id, userId);
-            } else {
-                throw new BadArgumentsException("Cannot dislike own review");
             }
+        } else {
+            throw new BadArgumentsException("Cannot dislike own review");
         }
         return reviewStorage.addDislike(id, userId);
     }
 
     public void deleteLike(Integer id, Integer userId) {
         Review review = reviewStorage.findById(id);
-        if (review.getUserId() != userId) {
+        if (review.getUserId() != userId.intValue()) {
             if (reviewStorage.findLikedReviewsByUser(userId).stream().anyMatch(r -> r.getReviewId() == id)) {
                 reviewStorage.deleteLike(id, userId);
             } else {
@@ -80,7 +80,7 @@ public class ReviewService {
 
     public void deleteDislike(Integer id, Integer userId) {
         Review review = reviewStorage.findById(id);
-        if (review.getUserId() != userId) {
+        if (review.getUserId() != userId.intValue()) {
             if (reviewStorage.findDislikedReviewsByUser(userId).stream().anyMatch(r -> r.getReviewId() == id)) {
                 reviewStorage.deleteDislike(id, userId);
             } else {

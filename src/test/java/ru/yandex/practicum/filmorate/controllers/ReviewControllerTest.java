@@ -168,7 +168,7 @@ class ReviewControllerTest {
     @Test
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void shouldAddLikeToReview3ThenFindReview3Second() throws Exception {
-        this.mockMvc.perform(put("/reviews/3/like/1"))
+        this.mockMvc.perform(put("/reviews/3/like/2"))
                 .andExpect(status().isOk());
         this.mockMvc.perform(get("/reviews"))
                 .andExpect(status().isOk())
@@ -227,10 +227,57 @@ class ReviewControllerTest {
     @Test
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void shouldThrowBadArgumentExceptionWhenLiking2TimesSameReview() throws Exception {
-        this.mockMvc.perform(put("/reviews/3/like/1"))
+        this.mockMvc.perform(put("/reviews/3/like/2"))
                 .andExpect(status().isOk());
-        this.mockMvc.perform(put("/reviews/3/like/1"))
+        this.mockMvc.perform(put("/reviews/3/like/2"))
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void shouldDeleteLikeFromReview3() throws Exception {
+        this.mockMvc.perform(delete("/reviews/3/like/1"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(get("/reviews/3"))
+                .andExpect(content().json("" +
+                        "{" +
+                        "\"reviewId\":3," +
+                        "\"content\":\"Very good review\"," +
+                        "\"userId\":3," +
+                        "\"filmId\":1," +
+                        "\"useful\":-1," +
+                        "\"isPositive\":true}"));
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void shouldDeleteDislikeFromReview2() throws Exception {
+        this.mockMvc.perform(delete("/reviews/2/dislike/1"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(get("/reviews/2"))
+                .andExpect(content().json("" +
+                        "{" +
+                        "\"reviewId\":2," +
+                        "\"content\":\"Very bad review\"," +
+                        "\"userId\":2," +
+                        "\"filmId\":1," +
+                        "\"useful\":100," +
+                        "\"isPositive\":false}"));
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void shouldThrowBadArgumentWhenDeletingUser2LikeFromReview2() throws Exception {
+        this.mockMvc.perform(delete("/reviews/2/like/2"))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException));
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void shouldThrowBadArgumentWhenDeletingUser2DislikeFromReview2() throws Exception {
+        this.mockMvc.perform(delete("/reviews/2/dislike/2"))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException));
+    }
 }

@@ -33,7 +33,7 @@ public class ReviewDaoImpl implements ReviewDao {
 
     @Override
     public Collection<Review> findAllForFilm(Integer filmId, Integer count) {
-        assert filmStorage.findById(filmId) != null;
+        filmStorage.findById(filmId);
         return jdbcTemplate.query(GET_ALL_REVIEWS_FOR_FILM, this::makeReview, filmId, count);
     }
 
@@ -44,6 +44,8 @@ public class ReviewDaoImpl implements ReviewDao {
 
     @Override
     public Review createReview(Review review) {
+        filmStorage.findById(review.getFilmId());
+        userStorage.findById(review.getUserId());
         try {
             SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                     .withTableName("reviews")
@@ -57,11 +59,11 @@ public class ReviewDaoImpl implements ReviewDao {
 
     @Override
     public Review updateReview(Review review) {
-        assert findById(review.getReviewId()) != null;
+        findById(review.getReviewId());
         jdbcTemplate.update(
                 UPDATE_REVIEW,
                 review.getContent(),
-                review.isPositive(),
+                review.getIsPositive(),
                 review.getUserId(),
                 review.getFilmId(),
                 review.getReviewId()
@@ -71,13 +73,13 @@ public class ReviewDaoImpl implements ReviewDao {
 
     @Override
     public void deleteReview(Integer id) {
-        assert findById(id) != null;
+        findById(id);
         jdbcTemplate.update(DELETE_REVIEW, id);
     }
 
     @Override
     public Review addLike(Integer id, Integer userId) {
-        assert userStorage.findById(userId) != null;
+        userStorage.findById(userId);
         try {
             jdbcTemplate.update(ADD_LIKE, userId, id, id);
             return findById(id);
@@ -88,7 +90,7 @@ public class ReviewDaoImpl implements ReviewDao {
 
     @Override
     public Review addDislike(Integer id, Integer userId) {
-        assert userStorage.findById(userId) != null;
+        userStorage.findById(userId);
         try {
             jdbcTemplate.update(ADD_DISLIKE, userId, id, id);
             return findById(id);
@@ -99,33 +101,27 @@ public class ReviewDaoImpl implements ReviewDao {
 
     @Override
     public void deleteLike(Integer id, Integer userId) {
-        assert userStorage.findById(userId) != null;
-        assert findById(id) !=null;
+        userStorage.findById(userId);
+        findById(id);
         jdbcTemplate.update(DELETE_LIKE, userId, id, id);
     }
 
     @Override
     public void deleteDislike(Integer id, Integer userId) {
-        assert userStorage.findById(userId) != null;
-        assert findById(id) !=null;
+        userStorage.findById(userId);
+        findById(id);
         jdbcTemplate.update(DELETE_DISLIKE, userId, id, id);
     }
 
     @Override
-    public Collection<Review> findUserReviews(Integer userId) {
-        assert userStorage.findById(userId) != null;
-        return jdbcTemplate.query(FIND_USER_REVIEWS, this::makeReview, userId);
-    }
-
-    @Override
     public Collection<Review> findLikedReviewsByUser(Integer userId) {
-        assert userStorage.findById(userId) != null;
+        userStorage.findById(userId);
         return jdbcTemplate.query(FIND_LIKED_REVIEWS_BY_USER, this::makeReview, userId);
     }
 
     @Override
     public Collection<Review> findDislikedReviewsByUser(Integer userId) {
-        assert userStorage.findById(userId) != null;
+        userStorage.findById(userId);
         return jdbcTemplate.query(FIND_DISLIKED_REVIEWS_BY_USER, this::makeReview, userId);
     }
 

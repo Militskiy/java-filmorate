@@ -19,9 +19,7 @@ public interface ReviewDao extends Dao<Review> {
 
     String DELETE_REVIEW =
             "DELETE FROM REVIEWS WHERE REVIEW_ID = ?";
-
-    String FIND_USER_REVIEWS =
-            "SELECT * FROM REVIEWS WHERE USER_ID = ?";
+    
 
     String ADD_LIKE =
             "INSERT INTO USERS_REVIEWS (USER_ID, REVIEW_ID, IS_LIKE) VALUES ( ?, ?, true );" +
@@ -39,11 +37,11 @@ public interface ReviewDao extends Dao<Review> {
                     "UPDATE REVIEWS SET USEFUL = USEFUL + 1 WHERE REVIEW_ID = ?";
 
     String FIND_LIKED_REVIEWS_BY_USER =
-            "SELECT * FROM REVIEWS WHERE AND REVIEW_ID IN " +
-                    "(SELECT REVIEW_ID FROM USERS_REVIEWS WHERE USER_ID = ? AND IS_LIKE = TRUE";
+            "SELECT * FROM REVIEWS WHERE REVIEW_ID IN " +
+                    "(SELECT REVIEW_ID FROM USERS_REVIEWS WHERE USER_ID = ? AND IS_LIKE = TRUE)";
     String FIND_DISLIKED_REVIEWS_BY_USER =
-            "SELECT * FROM REVIEWS WHERE AND REVIEW_ID IN " +
-                    "(SELECT REVIEW_ID FROM USERS_REVIEWS WHERE USER_ID = ? AND IS_LIKE = FALSE";
+            "SELECT * FROM REVIEWS WHERE REVIEW_ID IN " +
+                    "(SELECT REVIEW_ID FROM USERS_REVIEWS WHERE USER_ID = ? AND IS_LIKE = FALSE)";
 
     Collection<Review> findAllForFilm(Integer filmId, Integer count);
 
@@ -57,7 +55,6 @@ public interface ReviewDao extends Dao<Review> {
     Review addDislike(Integer id, Integer userId);
     void deleteLike(Integer id, Integer userId);
     void deleteDislike(Integer id, Integer userId);
-    Collection<Review> findUserReviews(Integer userId);
     Collection<Review> findLikedReviewsByUser(Integer userId);
     Collection<Review> findDislikedReviewsByUser(Integer userId);
 }

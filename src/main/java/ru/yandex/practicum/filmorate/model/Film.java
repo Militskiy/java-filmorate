@@ -38,9 +38,7 @@ public class Film {
     @Schema(type = "integer", example = "120")
     private long duration;
     @NotNull
-    @Schema(example = "{\"id\": 1}")
     private Mpa mpa;
-    @Schema(example = "[{\"id\": 1}]")
     private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
     @Schema(example = "[]")
     private final Set<User> userLikes = new HashSet<>();

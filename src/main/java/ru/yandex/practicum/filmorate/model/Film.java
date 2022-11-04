@@ -44,13 +44,16 @@ public class Film {
     private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
     @Schema(example = "[]")
     private final Set<User> userLikes = new HashSet<>();
+    @Schema(example = "{\"id\": 1}")
+    private Director director;
 
-    public Film(String name, String description, LocalDate releaseDate, long duration, Mpa mpa) {
+    public Film(String name, String description, LocalDate releaseDate, long duration, Mpa mpa, Director director) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
         this.mpa = mpa;
+        this.director = director;
     }
 
     public boolean addLike(User user) {

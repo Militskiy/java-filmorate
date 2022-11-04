@@ -14,10 +14,7 @@ import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchGenreException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -129,6 +126,12 @@ public class FilmDaoImpl implements FilmDao {
                 }).collect(Collectors.toList());
     }
 
+    @Override
+    public List<Film> findDirectorFilms(int directorId, String sortBy) {
+        String sqlQuery = sortBy.equals("likes")?GET_DIRECTOR_FILMS_LIKES_SORTED:GET_DIRECTOR_FILMS_YEAR_SORTED;
+        return jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs), directorId);
+    }
+
     private Collection<User> getFilmLikes(Integer filmId) {
         return jdbcTemplate.getJdbcTemplate()
                 .query(GET_FILM_LIKES, (rs, rowNum) -> makeUser(rs), filmId);
@@ -144,7 +147,8 @@ public class FilmDaoImpl implements FilmDao {
                 .addValue("filmDescription", film.getDescription())
                 .addValue("releaseDate", film.getReleaseDate())
                 .addValue("duration", film.getDuration())
-                .addValue("ratingId", film.getMpa().getId());
+                .addValue("ratingId", film.getMpa().getId())
+                .addValue("directorId", film.getDirector().getId());
         if (film.getId() > 0) {
             parameterSource.addValue("filmId", film.getId());
         }
@@ -158,7 +162,10 @@ public class FilmDaoImpl implements FilmDao {
         int duration = rs.getInt("duration");
         int ratingId = rs.getInt("rating_id");
         String ratingName = rs.getString("rating_name");
-        return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName));
+        int directorId = rs.getInt("director_id");
+        String directorName = rs.getString("director_name");
+        return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName),
+                new Director(directorId, directorName));
     }
 
     private void filmGenreUpdate(Film film) {

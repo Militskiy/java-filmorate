@@ -64,8 +64,6 @@ public class ReviewDaoImpl implements ReviewDao {
                 UPDATE_REVIEW,
                 review.getContent(),
                 review.getIsPositive(),
-                review.getUserId(),
-                review.getFilmId(),
                 review.getReviewId()
         );
         return findById(review.getReviewId());

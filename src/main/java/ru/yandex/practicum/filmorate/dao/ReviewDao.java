@@ -15,11 +15,10 @@ public interface ReviewDao extends Dao<Review> {
             "SELECT * FROM REVIEWS WHERE REVIEW_ID = ?";
 
     String UPDATE_REVIEW =
-            "UPDATE REVIEWS SET CONTENT = ?, IS_POSITIVE = ?, USER_ID = ?, FILM_ID = ? WHERE REVIEW_ID = ?";
+            "UPDATE REVIEWS SET CONTENT = ?, IS_POSITIVE = ? WHERE REVIEW_ID = ?";
 
     String DELETE_REVIEW =
             "DELETE FROM REVIEWS WHERE REVIEW_ID = ?";
-    
 
     String ADD_LIKE =
             "INSERT INTO USERS_REVIEWS (USER_ID, REVIEW_ID, IS_LIKE) VALUES ( ?, ?, true );" +

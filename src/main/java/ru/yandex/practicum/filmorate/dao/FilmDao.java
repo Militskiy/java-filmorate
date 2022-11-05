@@ -90,6 +90,30 @@ public interface FilmDao extends Dao<Film> {
 
     String DELETE_FILM = "DELETE FROM FILMS WHERE FILM_ID = ?";
 
+    String USER_QUERY = "SELECT USER_ID, COUNT(FILM_ID) " +
+            "FROM LIKES " +
+            "WHERE FILM_ID IN (SELECT FILM_ID " +
+            "FROM LIKES " +
+            "WHERE USER_ID = ?) AND USER_ID != ? " +
+            "GROUP BY USER_ID " +
+            "ORDER BY COUNT(FILM_ID) DESC " +
+            "LIMIT 1;";
+
+    String RECOMMENDED_FILMS =
+            "SELECT F.FILM_ID,\n" +
+                    "       FILM_NAME,\n" +
+                    "       FILM_DESCRIPTION,\n" +
+                    "       RELEASE_DATE,\n" +
+                    "       DURATION,\n" +
+                    "       F.RATING_ID,\n" +
+                    "       RATING_NAME\n" +
+            "FROM LIKES AS L\n" +
+            "JOIN FILMS AS F ON F.FILM_ID = L.FILM_ID\n" +
+            "JOIN RATINGS AS R ON R.RATING_ID = F.RATING_ID\n" +
+            "WHERE L.FILM_ID NOT IN (SELECT FILM_ID\n" +
+            "FROM LIKES\n" +
+            "WHERE USER_ID = ?) AND L.USER_ID = ? ;";
+
     String GET_DIRECTOR_FILMS_YEAR_SORTED =
             "SELECT F.FILM_ID,\n" +
                     "       FILM_NAME,\n" +
@@ -133,6 +157,8 @@ public interface FilmDao extends Dao<Film> {
     void removeLike(Integer filmId, Integer userId);
 
     Collection<Film> findPopularFilms(Integer count);
+
+    List<Film> getRecommendations(Integer userId);
 
     List<Film> findDirectorFilms(int directorId, String sortBy);
 }

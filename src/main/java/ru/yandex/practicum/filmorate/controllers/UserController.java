@@ -12,12 +12,14 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.services.UserService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -90,5 +92,11 @@ public class UserController {
             @PathVariable @Min(1) Integer friendId
     ) {
         userService.deleteFriends(id, friendId);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    @Operation(summary = "Recommendations for films to watch")
+    public List<Film> getRecommendations(@PathVariable Integer id) {
+        return userService.getRecommendations(id);
     }
 }

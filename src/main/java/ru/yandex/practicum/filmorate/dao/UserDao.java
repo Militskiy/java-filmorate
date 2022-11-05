@@ -54,11 +54,15 @@ public interface UserDao extends Dao<User> {
                     "             OR USER_ID = ? AND FRIEND_ID = ?) = 2 THEN TRUE ELSE CONFIRMED END\n" +
                     "WHERE USER_ID = ? AND FRIEND_ID = ? OR USER_ID = ? AND FRIEND_ID = ?";
 
+    String DELETE_USER = "DELETE FROM USERS WHERE USER_ID = ?";
+
     boolean delete(Integer userId, Integer friendId);
 
     Collection<User> findFriends(Integer userId);
 
     Collection<User> findCommonFriends(Integer userId, Integer otherId);
+
+    void removeUser(Integer userId);
 
     boolean createFriend(Integer userId, Integer friendId);
 

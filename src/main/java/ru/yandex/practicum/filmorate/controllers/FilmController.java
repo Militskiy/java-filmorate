@@ -42,6 +42,10 @@ public class FilmController {
         return filmService.findFilmById(id);
     }
 
+    @DeleteMapping("/{filmId}")
+    @Operation(summary = "Delete film by its id")
+    public void removeFilm(@PathVariable Integer filmId) {filmService.removeFilm(filmId);}
+
     @GetMapping("/popular")
     @Operation(summary = "Get a sorted list of films by popularity")
     public Collection<Film> findPopularFilms(

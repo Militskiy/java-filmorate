@@ -87,6 +87,9 @@ public interface FilmDao extends Dao<Film> {
                     "ORDER BY COUNT(L.FILM_ID) DESC\n" +
                     "LIMIT ?;";
 
+
+    String DELETE_FILM = "DELETE FROM FILMS WHERE FILM_ID = ?";
+
     String GET_DIRECTOR_FILMS_YEAR_SORTED =
             "SELECT F.FILM_ID,\n" +
                     "       FILM_NAME,\n" +
@@ -122,6 +125,8 @@ public interface FilmDao extends Dao<Film> {
     Film create(Film film);
 
     Film update(Film film);
+
+    void removeFilm(Integer filmId);
 
     void addLike(Integer filmId, Integer userId);
 

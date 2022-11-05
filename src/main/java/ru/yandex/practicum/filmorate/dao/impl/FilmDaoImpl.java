@@ -122,6 +122,14 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
+    public void removeFilm(Integer filmId) {
+        int result = jdbcTemplate.getJdbcTemplate().update(DELETE_FILM, filmId);
+        if (result != 1) {
+            throw new NoSuchFilmException("Film was not found");
+        }
+    }
+
+    @Override
     public void addLike(Integer filmId, Integer userId) {
         userStorage.findById(userId);
         if (findById(filmId).getUserLikes()

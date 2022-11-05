@@ -132,18 +132,13 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public List<Film> getRecommendations(Integer userId) {
-        List<Film> recommendationsList = new ArrayList<>();
-
-        SqlRowSet rs = jdbcTemplate.getJdbcTemplate().queryForRowSet(USER_QUERY, userId, userId);
-
-        if (!rs.next()) {
-            return recommendationsList;
-        }
-
-        Integer userId1 = rs.getInt("user_id");
-
         return jdbcTemplate.getJdbcTemplate().query(RECOMMENDED_FILMS,
-                (rowSet, rowNum) -> makeFilm(rowSet), userId, userId1);
+                        (rowSet, rowNum) -> makeFilm(rowSet), userId, userId, userId)
+                .stream().peek(film -> {
+            getFilmLikes(film.getId()).forEach(film::addLike);
+            getFilmGenres(film.getId()).forEach(film::addGenre);
+            getFilmDirectors(film.getId()).forEach(film::addDirector);
+        }).collect(Collectors.toList());
     }
 
     @Override

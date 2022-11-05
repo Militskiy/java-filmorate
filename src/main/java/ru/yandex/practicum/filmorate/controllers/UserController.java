@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.services.UserService;
 
@@ -21,7 +21,6 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping("/users")
-@Slf4j
 @RequiredArgsConstructor
 @Tag(name = "User services")
 public class UserController {
@@ -60,6 +59,14 @@ public class UserController {
             @PathVariable @Min(1) Integer otherId
     ) {
         return userService.findCommonFriends(id, otherId);
+    }
+
+    @GetMapping("/{id}/feed")
+    @Operation(summary = "Get user event feed")
+    public Collection<Event> findUserFeed(
+            @PathVariable @Min(1) Integer id
+    ) {
+        return userService.findFeed(id);
     }
 
     @PostMapping

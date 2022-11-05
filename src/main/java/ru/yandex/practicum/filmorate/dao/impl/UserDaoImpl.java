@@ -71,6 +71,7 @@ public class UserDaoImpl implements UserDao {
                     userId, friendId,
                     friendId, userId, userId, friendId,
                     friendId, userId, userId, friendId) > 0;
+
         } catch (DataIntegrityViolationException e) {
             throw new NoSuchUserException("No such users or attempting to add self");
         }

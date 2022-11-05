@@ -6,12 +6,15 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dao.EventDao;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.dao.ReviewDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchReviewException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,6 +29,7 @@ public class ReviewDaoImpl implements ReviewDao {
 
     private final FilmDao filmStorage;
     private final UserDao userStorage;
+    private final EventDao eventStorage;
 
     @Override
     public Collection<Review> findAll() {
@@ -52,6 +56,7 @@ public class ReviewDaoImpl implements ReviewDao {
                     .withTableName("reviews")
                     .usingGeneratedKeyColumns("review_id");
             int id = simpleJdbcInsert.executeAndReturnKey(review.toMap()).intValue();
+            eventStorage.createEvent(review.getUserId(), EventType.REVIEW, Operation.ADD, id);
             return findById(id);
         } catch (DuplicateKeyException e) {
             throw new BadArgumentsException("User already reviewed this film");
@@ -60,19 +65,21 @@ public class ReviewDaoImpl implements ReviewDao {
 
     @Override
     public Review updateReview(Review review) {
-        findById(review.getReviewId());
+        Review originalReview = findById(review.getReviewId());
         jdbcTemplate.update(
                 UPDATE_REVIEW,
                 review.getContent(),
                 review.getIsPositive(),
                 review.getReviewId()
         );
+        eventStorage.createEvent(originalReview.getUserId(), EventType.REVIEW, Operation.UPDATE, review.getReviewId());
         return findById(review.getReviewId());
     }
 
     @Override
     public void deleteReview(Integer id) {
-        findById(id);
+        Review review = findById(id);
+        eventStorage.createEvent(review.getUserId(), EventType.REVIEW, Operation.REMOVE, id);
         jdbcTemplate.update(DELETE_REVIEW, id);
     }
 

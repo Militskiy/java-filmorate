@@ -4,9 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.EventDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
 
 import java.util.Collection;
 
@@ -17,6 +21,7 @@ public class UserService {
 
     @Qualifier("UserDaoImpl")
     private final UserDao userStorage;
+    private final EventDao eventStorage;
 
     public Collection<User> findAllUsers() {
         log.debug("Sending user list");
@@ -44,13 +49,16 @@ public class UserService {
     public void addFriends(Integer userId, Integer friendId) {
         if (userStorage.createFriend(userId, friendId)) {
             log.debug("Creating friend link between users with ids: {} and {}", userId, friendId);
+            eventStorage.createEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
         } else {
             throw new BadArgumentsException("Users are already friends");
         }
     }
 
     public void deleteFriends(Integer userId, Integer friendId) {
-        if (!userStorage.delete(userId, friendId)) {
+        if (userStorage.delete(userId, friendId)) {
+            eventStorage.createEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
+        } else {
             throw new BadArgumentsException("Users are not friends");
         }
     }
@@ -66,5 +74,10 @@ public class UserService {
 
     public User findUserById(Integer userId) {
         return userStorage.findById(userId);
+    }
+
+    public Collection<Event> findFeed(Integer id) {
+        log.debug("Getting feed for user with id: {}", id);
+        return eventStorage.findFeed(id);
     }
 }

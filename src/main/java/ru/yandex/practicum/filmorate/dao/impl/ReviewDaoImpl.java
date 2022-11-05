@@ -30,10 +30,14 @@ public class ReviewDaoImpl implements ReviewDao {
     private final FilmDao filmStorage;
     private final UserDao userStorage;
     private final EventDao eventStorage;
-
     @Override
     public Collection<Review> findAll() {
         return jdbcTemplate.query(GET_ALL_REVIEWS, this::makeReview);
+    }
+
+    @Override
+    public Collection<Review> findTop(Integer count) {
+        return jdbcTemplate.query(GET_TOP_REVIEWS, this::makeReview, count);
     }
 
     @Override

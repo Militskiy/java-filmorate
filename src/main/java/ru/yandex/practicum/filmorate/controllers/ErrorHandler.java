@@ -46,6 +46,13 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNoSuchReviewException(final NoSuchReviewException e) {
+        log.debug(e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNoSuchRatingException(final NoSuchGenreException e) {
         log.debug(e.getMessage());
         return new ErrorResponse(e.getMessage());
@@ -69,7 +76,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleThrowable(final Throwable e) {
         log.debug(e.getMessage());
-        return new ErrorResponse("Unexpected error");
+        return new ErrorResponse("Unexpected error: "+ e.getMessage());
     }
 
     @ExceptionHandler

@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -37,7 +38,6 @@ public class User {
     @Past(message = "Birthday must be in the past")
     @Schema(example = "2000-10-22")
     private LocalDate birthday;
-    @Schema(example = "[]")
     private final Set<User> friends = new HashSet<>();
 
     public User(String email, String login, String name, LocalDate birthday) {
@@ -51,6 +51,7 @@ public class User {
         return friends.add(user);
     }
 
+    @JsonIgnore
     public Map<String, Object> getMap() {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("user_id", this.id);

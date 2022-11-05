@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
@@ -63,7 +63,7 @@ public class UserDaoImpl implements UserDao {
                     userId, friendId,
                     friendId, userId, userId, friendId,
                     friendId, userId, userId, friendId) > 0;
-        } catch (DataAccessException e) {
+        } catch (DataIntegrityViolationException e) {
             throw new NoSuchUserException("No such users or attempting to add self");
         }
     }

@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -11,14 +11,26 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.DirectorDAO;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
-import ru.yandex.practicum.filmorate.exceptions.*;
-import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.dao.UserDao;
+import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
+import ru.yandex.practicum.filmorate.exceptions.NoSuchDirectorException;
+import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
+import ru.yandex.practicum.filmorate.exceptions.NoSuchGenreException;
+import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
+import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,7 +40,7 @@ import java.util.stream.Stream;
 public class FilmDaoImpl implements FilmDao {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final UserDaoImpl userStorage;
+    private final UserDao userStorage;
     private final DirectorDAO directorStorage;
 
     @Override
@@ -44,14 +56,14 @@ public class FilmDaoImpl implements FilmDao {
         if (film.getGenres().size() > 0) {
             try {
                 filmGenreUpdate(film);
-            } catch (DataAccessException e) {
+            } catch (DataIntegrityViolationException e) {
                 throw new NoSuchGenreException("No such genre");
             }
         }
         if (film.getDirectors().size() > 0) {
             try {
                 filmDirectorUpdate(film);
-            } catch (DataAccessException e) {
+            } catch (DataIntegrityViolationException e) {
                 throw new NoSuchDirectorException("No such director");
             }
         }
@@ -67,7 +79,7 @@ public class FilmDaoImpl implements FilmDao {
                 try {
                     jdbcTemplate.update(DELETE_GENRES_QUERY, parameters);
                     filmGenreUpdate(film);
-                } catch (DataAccessException e) {
+                } catch (DataIntegrityViolationException e) {
                     throw new NoSuchGenreException("No such genre");
                 }
             } else {
@@ -77,7 +89,7 @@ public class FilmDaoImpl implements FilmDao {
                 try {
                     jdbcTemplate.update(DELETE_DIRECTORS_QUERY, parameters);
                     filmDirectorUpdate(film);
-                } catch (DataAccessException e) {
+                } catch (DataIntegrityViolationException e) {
                     throw new NoSuchDirectorException("No such director");
                 }
             } else {
@@ -111,7 +123,7 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public void addLike(Integer filmId, Integer userId) {
-        assert userStorage.findById(userId) != null;
+        userStorage.findById(userId);
         if (findById(filmId).getUserLikes()
                 .stream()
                 .noneMatch(user -> user.getId() == userId)) {
@@ -123,7 +135,7 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public void removeLike(Integer filmId, Integer userId) {
-        assert userStorage.findById(userId) != null;
+        userStorage.findById(userId);
         if (findById(filmId).getUserLikes()
                 .stream()
                 .anyMatch(user -> user.getId() == userId)) {

@@ -230,7 +230,8 @@ class ReviewControllerTest {
         this.mockMvc.perform(put("/reviews/3/like/2"))
                 .andExpect(status().isOk());
         this.mockMvc.perform(put("/reviews/3/like/2"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException));
     }
 
     @Test

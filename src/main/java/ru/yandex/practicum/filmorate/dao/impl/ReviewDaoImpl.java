@@ -2,10 +2,13 @@ package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.dao.ReviewDao;
+import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchReviewException;
 import ru.yandex.practicum.filmorate.model.Review;
@@ -21,8 +24,8 @@ public class ReviewDaoImpl implements ReviewDao {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private final FilmDaoImpl filmStorage;
-    private final UserDaoImpl userStorage;
+    private final FilmDao filmStorage;
+    private final UserDao userStorage;
 
     @Override
     public Collection<Review> findAll() {
@@ -50,7 +53,7 @@ public class ReviewDaoImpl implements ReviewDao {
                     .usingGeneratedKeyColumns("review_id");
             int id = simpleJdbcInsert.executeAndReturnKey(review.toMap()).intValue();
             return findById(id);
-        } catch (DataAccessException e) {
+        } catch (DuplicateKeyException e) {
             throw new BadArgumentsException("User already reviewed this film");
         }
     }
@@ -79,7 +82,7 @@ public class ReviewDaoImpl implements ReviewDao {
         try {
             jdbcTemplate.update(ADD_LIKE, userId, id, id);
             return findById(id);
-        } catch (DataAccessException e) {
+        } catch (DuplicateKeyException e) {
             throw new BadArgumentsException("Review already liked");
         }
     }

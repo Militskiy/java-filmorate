@@ -42,8 +42,8 @@ public class ReviewController {
             log.debug("Getting top {} reviews for film with id: {}", count, filmId.get());
             return reviewService.findAllReviewsForFilm(filmId.get(), count);
         }
-        log.debug("Getting all reviews");
-        return reviewService.findAllReviews();
+        log.debug("Getting top {} reviews", count);
+        return reviewService.findTop(count);
     }
 
     @GetMapping("/{id}")

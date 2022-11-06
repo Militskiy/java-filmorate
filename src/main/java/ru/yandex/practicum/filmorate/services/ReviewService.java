@@ -15,8 +15,8 @@ public class ReviewService {
 
     private final ReviewDao reviewStorage;
 
-    public Collection<Review> findAllReviews() {
-        return reviewStorage.findAll();
+    public Collection<Review> findTop(Integer count) {
+        return reviewStorage.findTop(count);
     }
 
     public Collection<Review> findAllReviewsForFilm(Integer filmId, Integer count) {

@@ -1,16 +1,15 @@
 package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.DirectorDAO;
+import ru.yandex.practicum.filmorate.dao.EventDao;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
@@ -23,6 +22,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,12 +38,12 @@ import java.util.stream.Stream;
 
 @AllArgsConstructor
 @Component("FilmDaoImpl")
-@Slf4j
 public class FilmDaoImpl implements FilmDao {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final UserDao userStorage;
     private final DirectorDAO directorStorage;
+    private final EventDao eventStorage;
 
     @Override
     public Film create(Film film) {
@@ -148,6 +149,7 @@ public class FilmDaoImpl implements FilmDao {
                 .stream()
                 .noneMatch(user -> user.getId() == userId)) {
             jdbcTemplate.getJdbcTemplate().update(ADD_LIKE, userId, filmId);
+            eventStorage.createEvent(userId, EventType.LIKE, Operation.ADD, filmId);
         } else {
             throw new BadArgumentsException("Film already liked");
         }
@@ -160,6 +162,7 @@ public class FilmDaoImpl implements FilmDao {
                 .stream()
                 .anyMatch(user -> user.getId() == userId)) {
             jdbcTemplate.getJdbcTemplate().update(DELETE_LIKE, filmId, userId);
+            eventStorage.createEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
         } else {
             throw new NoSuchUserException("Film not liked");
         }

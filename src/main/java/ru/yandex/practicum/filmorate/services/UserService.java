@@ -4,11 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -17,6 +20,7 @@ public class UserService {
 
     @Qualifier("UserDaoImpl")
     private final UserDao userStorage;
+    private final FilmDao filmStorage;
 
     public Collection<User> findAllUsers() {
         log.debug("Sending user list");
@@ -62,6 +66,11 @@ public class UserService {
     public Collection<User> findCommonFriends(Integer userId, Integer otherId) {
         log.debug("Listing common friends for users with ids {} and {}", userId, otherId);
         return userStorage.findCommonFriends(userId, otherId);
+    }
+
+    public List<Film> getRecommendations(Integer userId) {
+        log.debug("Recommendations for films to watch from user with ID {}", userId);
+        return filmStorage.getRecommendations(userId);
     }
 
     public User findUserById(Integer userId) {

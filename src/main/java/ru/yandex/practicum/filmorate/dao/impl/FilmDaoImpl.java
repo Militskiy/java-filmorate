@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.DirectorDAO;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
@@ -127,6 +128,17 @@ public class FilmDaoImpl implements FilmDao {
         if (result != 1) {
             throw new NoSuchFilmException("Film was not found");
         }
+    }
+
+    @Override
+    public List<Film> getRecommendations(Integer userId) {
+        return jdbcTemplate.getJdbcTemplate().query(RECOMMENDED_FILMS,
+                        (rowSet, rowNum) -> makeFilm(rowSet), userId, userId, userId)
+                .stream().peek(film -> {
+            getFilmLikes(film.getId()).forEach(film::addLike);
+            getFilmGenres(film.getId()).forEach(film::addGenre);
+            getFilmDirectors(film.getId()).forEach(film::addDirector);
+        }).collect(Collectors.toList());
     }
 
     @Override

@@ -135,6 +135,16 @@ public interface FilmDao extends Dao<Film> {
                     "GROUP BY F.FILM_ID\n" +
                     "ORDER BY COUNT(L.FILM_ID) DESC\n";
 
+    String SEARCH_BY_DIRECTOR = "SELECT F.FILM_ID " +
+            "FROM FILMS F " +
+            "JOIN DIRECTORS_FILMS DF ON F.FILM_ID = DF.FILM_ID " +
+            "LEFT JOIN DIRECTORS D ON D.DIRECTOR_ID = DF.DIRECTOR_ID " +
+            "WHERE UPPER(D.DIRECTOR_NAME) LIKE UPPER";
+
+    String SEARCH_BY_FILM_NAME = "SELECT F.FILM_ID " +
+            "FROM FILMS F " +
+            "WHERE UPPER(F.FILM_NAME) LIKE UPPER";
+
     Film create(Film film);
 
     Film update(Film film);
@@ -150,4 +160,6 @@ public interface FilmDao extends Dao<Film> {
     List<Film> getRecommendations(Integer userId);
 
     List<Film> findDirectorFilms(int directorId, String sortBy);
+
+    List<Film> search(String query, List<String> searchFilters);
 }

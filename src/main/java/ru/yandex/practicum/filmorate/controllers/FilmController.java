@@ -100,4 +100,10 @@ public class FilmController {
         log.debug("Getting all films by director");
         return filmService.getDirectorFilmsSorted(directorId, sortBy);
     }
+
+    @GetMapping("/search")
+    @Operation(summary = "Getting films sorted by filters")
+    public List<Film> search(@RequestParam String query, @RequestParam List<String> by) {
+        return filmService.search(query, by);
+    }
 }

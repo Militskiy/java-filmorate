@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
+import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -52,5 +54,15 @@ public class FilmService {
 
     public List<Film> getDirectorFilmsSorted(int directorId, String sortBy) {
         return filmStorage.findDirectorFilms(directorId, sortBy);
+    }
+
+    public List<Film> search(String query, List<String> searchFilters) {
+        if (searchFilters.size() > 2) {
+            throw new BadArgumentsException("Search filters are out of the request limits (max 2 filters).");
+        }
+        if (searchFilters.size() > new HashSet<>(searchFilters).size()) {
+            throw new BadArgumentsException("Search request has filter repeats.");
+        }
+        return filmStorage.search(query, searchFilters);
     }
 }

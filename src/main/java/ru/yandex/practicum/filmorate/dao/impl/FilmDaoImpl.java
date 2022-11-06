@@ -262,4 +262,33 @@ public class FilmDaoImpl implements FilmDao {
                     }
                 });
     }
+
+    @Override
+    public List<Film> search(String query, List<String> searchFilters) {
+        StringBuilder sb = new StringBuilder();
+        String Q = "('%" + query + "%')";
+        String searchByDirector = SEARCH_BY_DIRECTOR + Q;
+        String searchByFilmName = SEARCH_BY_FILM_NAME + Q;
+
+        for (int i = 0; i < searchFilters.size(); i++) {
+            String s = searchFilters.get(i);
+            if (s.equals("director")) sb.append(searchByDirector);
+            if (s.equals("title")) sb.append(searchByFilmName);
+            if (!(i == searchFilters.size() - 1)) sb.append(" UNION ");
+
+        }
+
+        String sqlQuery =
+                "SELECT SEARCH.FILM_ID " +
+                        "FROM " + "("+ sb +") AS SEARCH " +
+                        "LEFT OUTER JOIN LIKES AS L ON L.FILM_ID = SEARCH.FILM_ID " +
+                        "GROUP BY SEARCH.FILM_ID " +
+                        "ORDER BY COUNT(L.USER_ID) DESC";
+
+        List<Integer> filmIds = jdbcTemplate.getJdbcTemplate().queryForList(sqlQuery,Integer.class);
+
+        return filmIds.stream()
+                .map(this::findById)
+                .collect(Collectors.toList());
+    }
 }

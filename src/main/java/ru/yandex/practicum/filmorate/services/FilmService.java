@@ -49,4 +49,8 @@ public class FilmService {
     public Film findFilmById(Integer filmId) {
         return filmStorage.findById(filmId);
     }
+
+    public Collection<Film> findCommonFilmsOfCoupleFriends(Integer userdId, Integer friendId) {
+        return filmStorage.findCommonFilmsOfCoupleFriends(userdId,friendId);
+    }
 }

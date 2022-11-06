@@ -129,6 +129,17 @@ public class FilmDaoImpl implements FilmDao {
                 }).collect(Collectors.toList());
     }
 
+    @Override
+    public Collection<Film> findCommonFilmsOfCoupleFriends(Integer userId, Integer friendId) {
+
+        return jdbcTemplate.getJdbcTemplate().query(FIND_COMMON_FILMS_COUPLE_FRIENDS, (rs, rowNum) -> makeFilm(rs),userId,friendId)
+                .stream().peek(film -> {
+                    getFilmLikes(film.getId()).forEach(film::addLike);
+                    getFilmGenres(film.getId()).forEach(film::addGenre);
+                }).collect(Collectors.toList());
+
+    }
+
     private Collection<User> getFilmLikes(Integer filmId) {
         return jdbcTemplate.getJdbcTemplate()
                 .query(GET_FILM_LIKES, (rs, rowNum) -> makeUser(rs), filmId);
@@ -170,10 +181,13 @@ public class FilmDaoImpl implements FilmDao {
                         ps.setInt(1, film.getId());
                         ps.setInt(2, filmGenres.get(i).getId());
                     }
+
                     @Override
                     public int getBatchSize() {
                         return filmGenres.size();
                     }
                 });
     }
+
+
 }

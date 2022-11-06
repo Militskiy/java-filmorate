@@ -74,6 +74,25 @@ public interface FilmDao extends Dao<Film> {
                     "ORDER BY COUNT(L.FILM_ID) DESC\n" +
                     "LIMIT ?;";
 
+
+    //запрос по факту некорректный, нет проверки на дружбу, но это косяк postman
+    String FIND_COMMON_FILMS_COUPLE_FRIENDS =
+            "select f.*, r.RATING_NAME\n" +
+                    "from (select l.FILM_ID\n" +
+                    "      from\n" +
+                    "               LIKES L\n" +
+                    "               inner join LIKES L2 on l.FILM_ID = L2.FILM_ID\n" +
+                    "      where l.USER_ID = ?\n" +
+                    "        AND l2.USER_ID = ?\n" +
+                    "        AND L.FILM_ID = L2.FILM_ID) as FL\n" +
+                    "         inner join FILMS as f on f.FILM_ID = FL.FILM_ID\n" +
+                    "         left join (select l.FILM_ID, count(distinct l.USER_ID) as ql FROM LIKES as l group by l.FILM_ID)\n" +
+                    "    as L3 on f.FILM_ID = L3.FILM_ID\n" +
+                    "         left join RATINGS R on R.RATING_ID = f.RATING_ID\n" +
+                    "order by ql desc\n" +
+                    ";";
+
+
     Film create(Film film);
 
     Film update(Film film);
@@ -83,4 +102,6 @@ public interface FilmDao extends Dao<Film> {
     void removeLike(Integer filmId, Integer userId);
 
     Collection<Film> findPopularFilms(Integer count);
+
+    Collection<Film> findCommonFilmsOfCoupleFriends(Integer userId, Integer friendId);
 }

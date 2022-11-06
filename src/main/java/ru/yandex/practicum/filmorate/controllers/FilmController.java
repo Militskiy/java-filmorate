@@ -78,4 +78,15 @@ public class FilmController {
     ) {
         filmService.removeLike(id, userId);
     }
+
+    @GetMapping("/common")
+    @Operation(summary = "Get a sorted common list of couple friends by popularity")
+    public Collection<Film> findCommonFilmsOfCoupleFriends(
+            @RequestParam(value = "userId",required = true) Integer userId,
+            @RequestParam(value = "friendId", required = true) Integer friendId
+    ) {
+        return filmService.findCommonFilmsOfCoupleFriends(userId, friendId);
+    }
+
+
 }

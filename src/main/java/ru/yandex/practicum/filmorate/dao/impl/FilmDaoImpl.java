@@ -1,14 +1,12 @@
 package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.DirectorDAO;
 import ru.yandex.practicum.filmorate.dao.EventDao;
@@ -40,7 +38,6 @@ import java.util.stream.Stream;
 
 @AllArgsConstructor
 @Component("FilmDaoImpl")
-@Slf4j
 public class FilmDaoImpl implements FilmDao {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;

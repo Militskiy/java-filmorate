@@ -6,9 +6,14 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dao.EventDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
+import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -20,6 +25,7 @@ import java.util.stream.Collectors;
 public class UserDaoImpl implements UserDao {
 
     private final JdbcTemplate jdbcTemplate;
+    private final EventDao eventStorage;
 
     @Override
     public Collection<User> findAll() {
@@ -56,6 +62,12 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
+    public Collection<Event> findFeed(Integer id) {
+        findById(id);
+        return eventStorage.findFeed(id);
+    }
+
+    @Override
     public void removeUser(Integer userId) {
         int result = jdbcTemplate.update(DELETE_USER, userId);
         if (result != 1) {
@@ -64,22 +76,33 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public boolean createFriend(Integer userId, Integer friendId) {
+    public void addFriend(Integer userId, Integer friendId) {
+        findById(userId);
+        findById(friendId);
         try {
-            return jdbcTemplate.update(CREATE_FRIEND_QUERY,
+            if (jdbcTemplate.update(CREATE_FRIEND_QUERY,
                     userId, friendId,
                     userId, friendId,
                     friendId, userId, userId, friendId,
-                    friendId, userId, userId, friendId) > 0;
-
+                    friendId, userId, userId, friendId) == 1) {
+                eventStorage.createEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
+            } else {
+                throw new BadArgumentsException("Users are already friends");
+            }
         } catch (DataIntegrityViolationException e) {
-            throw new NoSuchUserException("No such users or attempting to add self");
+            throw new BadArgumentsException("Cannot add self as friend");
         }
     }
 
     @Override
-    public boolean delete(Integer userId, Integer friendId) {
-        return jdbcTemplate.update(DELETE_FRIEND_QUERY, userId, friendId) > 0;
+    public void removeFriend(Integer userId, Integer friendId) {
+        findById(userId);
+        findById(friendId);
+        if (jdbcTemplate.update(DELETE_FRIEND_QUERY, userId, friendId) == 1) {
+            eventStorage.createEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
+        } else {
+            throw new BadArgumentsException("Users are not friends");
+        }
     }
 
     @Override

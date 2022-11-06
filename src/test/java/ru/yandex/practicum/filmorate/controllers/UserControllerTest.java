@@ -266,6 +266,24 @@ public class UserControllerTest implements TestJsons {
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void tryToAddSelfAsFriend() throws Exception {
         this.mockMvc.perform(put("/users/1/friends/1"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void shouldGetAddFriendEvent() throws Exception {
+        this.mockMvc.perform(put("/users/2/friends/3"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(get("/users/2/feed"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[" +
+                        "{" +
+                        "\"eventId\":1," +
+                        "\"userId\":2," +
+                        "\"eventType\":\"FRIEND\"," +
+                        "\"operation\":\"ADD\"," +
+                        "\"entityId\":3" +
+                        "}" +
+                        "]"));
     }
 }

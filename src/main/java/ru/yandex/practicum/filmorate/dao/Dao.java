@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.dao;
 
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
@@ -28,6 +29,12 @@ public interface Dao<T> {
         int id = rs.getInt("genre_id");
         String name = rs.getString("genre_name");
         return new Genre(id, name);
+    }
+
+    default Director makeDirector(ResultSet rs) throws SQLException {
+        int id = rs.getInt("director_id");
+        String name = rs.getString("director_name");
+        return new Director(id, name);
     }
 
     default Mpa makeMpa(ResultSet rs) throws SQLException {

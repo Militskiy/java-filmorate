@@ -1,6 +1,6 @@
 # Filmorate application
 
-![ER diagram](/assets/images/Filmorate_ER_diagram.webp)
+![ER diagram](/assets/images/Filmorate.png)
 
 # Documentation
 ### Swagger API link: 

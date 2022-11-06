@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.validators.NullCheckGroup;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PastOrPresent;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
@@ -30,7 +29,6 @@ public class Film {
     @Schema(example = "A film to test application")
     private String description;
     @NotNull(message = "Release date must not be null", groups = NullCheckGroup.class)
-    @PastOrPresent(message = "Release date cannot be in the future")
     @FilmDateConstraint
     @Schema(example = "2000-10-22")
     private LocalDate releaseDate;
@@ -38,12 +36,11 @@ public class Film {
     @Schema(type = "integer", example = "120")
     private long duration;
     @NotNull
-    @Schema(example = "{\"id\": 1}")
     private Mpa mpa;
-    @Schema(example = "[{\"id\": 1}]")
     private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
     @Schema(example = "[]")
     private final Set<User> userLikes = new HashSet<>();
+    private final Set<Director> directors = new HashSet<>();
 
     public Film(String name, String description, LocalDate releaseDate, long duration, Mpa mpa) {
         this.name = name;
@@ -62,5 +59,12 @@ public class Film {
     }
     public boolean removeGenre(Genre genre) {
         return genres.remove(genre);
+    }
+
+    public boolean addDirector(Director director) {
+        return directors.add(director);
+    }
+    public boolean removeDirector(Director director) {
+        return directors.remove(director);
     }
 }

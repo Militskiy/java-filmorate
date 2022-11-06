@@ -26,12 +26,14 @@ public class GenreController {
     @GetMapping
     @Operation(summary = "Get a list of all genres")
     public Collection<Genre> findAll() {
+        log.debug("Getting all genres");
         return genreService.findAll();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a specific genre by its id")
     public Genre findGenre(@PathVariable @Min(1) Integer id) {
+        log.debug("Getting genre with id: {}", id);
         return genreService.findById(id);
     }
 }

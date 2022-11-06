@@ -30,15 +30,16 @@ public interface TestJsons {
                     "{\"id\":2,\"email\":\"email2@test.com\",\"login\":\"login2\",\"name\":\"name2\"," +
                     "\"birthday\":\"2022-10-01\",\"friends\":[]},{\"id\":1,\"email\":\"email1@test.com\"," +
                     "\"login\":\"login1\",\"name\":\"name1\",\"birthday\":\"2022-10-01\",\"friends\":[]}]}," +
-                    "{\"id\":2,\"name\":\"film2\",\"description\":\"description2\",\"releaseDate\":\"2022-10-01\"," +
+                    "{\"id\":2,\"name\":\"film2\",\"description\":\"description2\",\"releaseDate\":\"2022-10-02\"," +
                     "\"duration\":120,\"mpa\":{\"id\":2,\"name\":\"PG\"},\"genres\":[{\"id\":1,\"name\":\"Комедия\"}]," +
                     "\"userLikes\":[{\"id\":3,\"email\":\"email3@test.com\",\"login\":\"login3\",\"name\":\"name3\"," +
                     "\"birthday\":\"2022-10-01\",\"friends\":[]},{\"id\":2,\"email\":\"email2@test.com\"," +
                     "\"login\":\"login2\",\"name\":\"name2\",\"birthday\":\"2022-10-01\",\"friends\":[]}]}," +
-                    "{\"id\":1,\"name\":\"film1\",\"description\":\"description1\",\"releaseDate\":\"2022-10-01\"," +
+                    "{\"id\":1,\"name\":\"film1\",\"description\":\"description1\",\"releaseDate\":\"2022-10-03\"," +
                     "\"duration\":120,\"mpa\":{\"id\":1,\"name\":\"G\"},\"genres\":[{\"id\":1,\"name\":\"Комедия\"}," +
                     "{\"id\":2,\"name\":\"Драма\"},{\"id\":3,\"name\":\"Мультфильм\"},{\"id\":4,\"name\":\"Триллер\"}," +
                     "{\"id\":5,\"name\":\"Документальный\"},{\"id\":6,\"name\":\"Боевик\"}]," +
                     "\"userLikes\":[{\"id\":3,\"email\":\"email3@test.com\",\"login\":\"login3\",\"name\":\"name3\"," +
                     "\"birthday\":\"2022-10-01\",\"friends\":[]}]}]";
+
 }

@@ -290,26 +290,25 @@ public class FilmDaoImpl implements FilmDao {
             if (!(i == searchFilters.size() - 1)) sb.append(" UNION ");
         }
 
-        /*String sqlQuery =
-                "SELECT SEARCH.FILM_ID " +
-                        "FROM " + "("+ sb +") AS SEARCH " +
-                        "LEFT OUTER JOIN LIKES AS L ON L.FILM_ID = SEARCH.FILM_ID " +
-                        "GROUP BY SEARCH.FILM_ID " +
-                        "ORDER BY COUNT(L.USER_ID) DESC";
-
-        List<Integer> filmIds = jdbcTemplate.getJdbcTemplate().queryForList(sqlQuery,Integer.class);
-
-        return filmIds.stream()
-                .map(this::findById)
-                .collect(Collectors.toList());*/
-
         String sqlQuery =
-                "SELECT * " +
-                        "FROM " + "("+ sb +") AS SEARCH " +
-                        "LEFT OUTER JOIN LIKES AS L ON L.FILM_ID = SEARCH.FILM_ID " +
+                "SELECT SEARCH.FILM_ID," +
+                        "SEARCH.FILM_NAME," +
+                        "SEARCH.FILM_DESCRIPTION," +
+                        "SEARCH.RELEASE_DATE," +
+                        "SEARCH.DURATION," +
+                        "SEARCH.RATING_ID," +
+                        "SEARCH.RATING_NAME " +
+                        "FROM " + "(" + sb + ") AS SEARCH " +
+                        "LEFT JOIN LIKES AS L ON L.FILM_ID = SEARCH.FILM_ID " +
                         "GROUP BY SEARCH.FILM_ID " +
-                        "ORDER BY COUNT(L.USER_ID) DESC";
+                        "ORDER BY COUNT(L.FILM_ID) DESC";
 
-        return jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs));
+        return jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs))
+                .stream()
+                .peek(film -> {
+                    getFilmLikes(film.getId()).forEach(film::addLike);
+                    getFilmGenres(film.getId()).forEach(film::addGenre);
+                    getFilmDirectors(film.getId()).forEach(film::addDirector);
+                }).collect(Collectors.toList());
     }
 }

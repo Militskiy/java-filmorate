@@ -155,42 +155,20 @@ public interface FilmDao extends Dao<Film> {
                     "ORDER BY COUNT(L.FILM_ID) DESC\n";
 
     String SEARCH_BY_DIRECTOR =
-            "SELECT F.FILM_ID,\n" +
-                    "       F.FILM_NAME,\n" +
-                    "       F.FILM_DESCRIPTION,\n" +
-                    "       F.RELEASE_DATE,\n" +
-                    "       F.DURATION,\n" +
-                    "       F.RATING_ID,\n" +
+            "SELECT F.*,\n" +
                     "       R.RATING_NAME\n" +
-            "FROM FILMS F\n" +
-            "JOIN DIRECTORS_FILMS DF ON F.FILM_ID = DF.FILM_ID\n" +
-            "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
-            "LEFT JOIN DIRECTORS D ON D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
-            "WHERE UPPER(D.DIRECTOR_NAME) LIKE UPPER\n";
+                    "FROM FILMS F\n" +
+                    "JOIN DIRECTORS_FILMS DF ON F.FILM_ID = DF.FILM_ID\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN DIRECTORS D ON D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
+                    "WHERE UPPER(D.DIRECTOR_NAME) LIKE UPPER\n";
 
     String SEARCH_BY_FILM_NAME =
-            "SELECT F.FILM_ID,\n" +
-                    "       F.FILM_NAME,\n" +
-                    "       F.FILM_DESCRIPTION,\n" +
-                    "       F.RELEASE_DATE,\n" +
-                    "       F.DURATION,\n" +
-                    "       F.RATING_ID,\n" +
+            "SELECT F.*,\n" +
                     "       R.RATING_NAME\n" +
-            "FROM FILMS F\n" +
-            "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
-            "WHERE UPPER(F.FILM_NAME) LIKE UPPER\n";
-
-    /*String SEARCH_BY_DIRECTOR =
-            "SELECT F.FILM_ID\n" +
-            "FROM FILMS F\n" +
-            "JOIN DIRECTORS_FILMS DF ON F.FILM_ID = DF.FILM_ID\n" +
-            "LEFT JOIN DIRECTORS D ON D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
-            "WHERE UPPER(D.DIRECTOR_NAME) LIKE UPPER\n";
-
-    String SEARCH_BY_FILM_NAME =
-            "SELECT F.FILM_ID,\n" +
-            "FROM FILMS F\n" +
-            "WHERE UPPER(F.FILM_NAME) LIKE UPPER\n";*/
+                    "FROM FILMS F\n" +
+                    "LEFT JOIN RATINGS R ON R.RATING_ID = F.RATING_ID\n" +
+                    "WHERE UPPER(F.FILM_NAME) LIKE UPPER\n";
 
     Film create(Film film);
 

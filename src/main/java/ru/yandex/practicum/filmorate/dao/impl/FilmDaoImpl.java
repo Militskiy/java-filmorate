@@ -179,6 +179,17 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
+    public Collection<Film> findCommonFilmsOfCoupleFriends(Integer userId, Integer friendId) {
+
+        return jdbcTemplate.getJdbcTemplate().query(FIND_COMMON_FILMS_COUPLE_FRIENDS, (rs, rowNum) -> makeFilm(rs),userId,friendId)
+                .stream().peek(film -> {
+                    getFilmLikes(film.getId()).forEach(film::addLike);
+                    getFilmGenres(film.getId()).forEach(film::addGenre);
+                }).collect(Collectors.toList());
+
+    }
+
+    @Override
     public List<Film> findDirectorFilms(int directorId, String sortBy) {
         directorStorage.findById(directorId)
                 .orElseThrow(() -> new NoSuchDirectorException(String.format("Director with id = %d not found", directorId)));
@@ -240,12 +251,15 @@ public class FilmDaoImpl implements FilmDao {
                         ps.setInt(1, film.getId());
                         ps.setInt(2, filmGenres.get(i).getId());
                     }
+
                     @Override
                     public int getBatchSize() {
                         return filmGenres.size();
                     }
                 });
     }
+
+
 
     private void filmDirectorUpdate(Film film) {
         List<Director> directors = new ArrayList<>(film.getDirectors());

@@ -280,28 +280,17 @@ public class FilmDaoImpl implements FilmDao {
     @Override
     public List<Film> search(String query, List<String> searchFilters) {
         StringBuilder sb = new StringBuilder();
-        String searchByDirector = SEARCH_BY_DIRECTOR + "('%" + query + "%')";
-        String searchByFilmName = SEARCH_BY_FILM_NAME + "('%" + query + "%')";
+        String searchByDirector = SEARCH_BY_DIRECTOR.replace("chars", query);
+        String searchByFilmName = SEARCH_BY_FILM_NAME.replace("chars", query);
 
         for (int i = 0; i < searchFilters.size(); i++) {
             String s = searchFilters.get(i);
-            if (s.equals("director")) sb.append(searchByDirector);
-            if (s.equals("title")) sb.append(searchByFilmName);
-            if (!(i == searchFilters.size() - 1)) sb.append(" UNION ");
+            if (s.equals(DIRECTOR)) sb.append(searchByDirector);
+            if (s.equals(TITLE)) sb.append(searchByFilmName);
+            if (!(i == searchFilters.size() - 1)) sb.append(UNION);
         }
 
-        String sqlQuery =
-                "SELECT SEARCH.FILM_ID," +
-                        "SEARCH.FILM_NAME," +
-                        "SEARCH.FILM_DESCRIPTION," +
-                        "SEARCH.RELEASE_DATE," +
-                        "SEARCH.DURATION," +
-                        "SEARCH.RATING_ID," +
-                        "SEARCH.RATING_NAME " +
-                        "FROM " + "(" + sb + ") AS SEARCH " +
-                        "LEFT JOIN LIKES AS L ON L.FILM_ID = SEARCH.FILM_ID " +
-                        "GROUP BY SEARCH.FILM_ID " +
-                        "ORDER BY COUNT(L.FILM_ID) DESC";
+        String sqlQuery = SQL_QUERY.replace("string", sb);
 
         return jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs))
                 .stream()

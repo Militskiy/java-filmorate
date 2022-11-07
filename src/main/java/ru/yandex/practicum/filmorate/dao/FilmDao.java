@@ -161,14 +161,33 @@ public interface FilmDao extends Dao<Film> {
                     "JOIN DIRECTORS_FILMS DF ON F.FILM_ID = DF.FILM_ID\n" +
                     "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
                     "LEFT JOIN DIRECTORS D ON D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
-                    "WHERE UPPER(D.DIRECTOR_NAME) LIKE UPPER\n";
+                    "WHERE UPPER(D.DIRECTOR_NAME) LIKE UPPER\n" +
+                    "('%" + "chars" + "%')";
 
     String SEARCH_BY_FILM_NAME =
             "SELECT F.*,\n" +
                     "       R.RATING_NAME\n" +
                     "FROM FILMS F\n" +
                     "LEFT JOIN RATINGS R ON R.RATING_ID = F.RATING_ID\n" +
-                    "WHERE UPPER(F.FILM_NAME) LIKE UPPER\n";
+                    "WHERE UPPER(F.FILM_NAME) LIKE UPPER\n" +
+                    "('%" + "chars" + "%')";
+
+    String SQL_QUERY =
+            "SELECT SEARCH.FILM_ID,\n" +
+                    "SEARCH.FILM_NAME,\n" +
+                    "SEARCH.FILM_DESCRIPTION,\n" +
+                    "SEARCH.RELEASE_DATE,\n" +
+                    "SEARCH.DURATION,\n" +
+                    "SEARCH.RATING_ID,\n" +
+                    "SEARCH.RATING_NAME\n" +
+                    "FROM " + "(" + "string" + ") AS SEARCH\n" +
+                    "LEFT JOIN LIKES AS L ON L.FILM_ID = SEARCH.FILM_ID\n" +
+                    "GROUP BY SEARCH.FILM_ID\n" +
+                    "ORDER BY COUNT(L.FILM_ID) DESC";
+
+    String UNION = "\nUNION\n";
+    String DIRECTOR = "director";
+    String TITLE = "title";
 
     Film create(Film film);
 

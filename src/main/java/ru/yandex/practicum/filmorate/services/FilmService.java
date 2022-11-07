@@ -13,6 +13,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import static ru.yandex.practicum.filmorate.dao.FilmDao.DIRECTOR;
+import static ru.yandex.practicum.filmorate.dao.FilmDao.TITLE;
+
 @Service
 @RequiredArgsConstructor
 public class FilmService {
@@ -61,12 +64,33 @@ public class FilmService {
     }
 
     public List<Film> search(String query, List<String> searchFilters) {
+
         if (searchFilters.size() > 2) {
             throw new BadArgumentsException("Search filters are out of the request limits (max 2 filters).");
         }
+
         if (searchFilters.size() > new HashSet<>(searchFilters).size()) {
             throw new BadArgumentsException("Search request has filter repeats.");
         }
+
+        if (searchFilters.size() == 1) {
+            if (!searchFilters.contains(DIRECTOR)) {
+                if (!searchFilters.contains(TITLE)) {
+                    throw new BadArgumentsException("Incorrect filter. Should be - title.");
+                }
+            } else if (!searchFilters.contains(TITLE)) {
+                if (!searchFilters.contains(DIRECTOR)) {
+                    throw new BadArgumentsException("Incorrect filter. Should be - director.");
+                }
+            }
+        }
+
+        if (searchFilters.size() == 2) {
+            if (!searchFilters.contains(DIRECTOR) && !searchFilters.contains(TITLE)) {
+                throw new BadArgumentsException("Incorrect filters. Should be - director and title.");
+            }
+        }
+
         return filmStorage.search(query, searchFilters);
     }
 }

@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface FilmDao extends Dao<Film> {
 
@@ -122,6 +123,19 @@ public interface FilmDao extends Dao<Film> {
                     "GROUP BY F.FILM_ID\n" +
                     "ORDER BY COUNT(L.FILM_ID) DESC\n";
 
+    String GET_THE_MOST_POPULAR_FILMS_WITH_FILTRES =
+            "select DISTINCT f.*, L3.ql, RATING_NAME\n" +
+                    "from FILMS as f\n" +
+                    "         left join (select l.FILM_ID, count(distinct l.USER_ID) as ql FROM LIKES as l group by l.FILM_ID)\n" +
+                    "    as L3 on f.FILM_ID = L3.FILM_ID\n" +
+                    "         inner join GENRES_FILMS GF on f.FILM_ID = GF.FILM_ID\n" +
+                    "inner join RATINGS R on R.RATING_ID = f.RATING_ID\n" +
+                    "where ((YEAR(f.RELEASE_DATE) = ?) or ?=false)\n" +
+                    "  AND ((gf.GENRE_ID = ?) or ? = false)\n" +
+                    "order by ql desc\n" +
+                    "LIMIT ?;";
+
+
     Film create(Film film);
 
     Film update(Film film);
@@ -135,4 +149,8 @@ public interface FilmDao extends Dao<Film> {
     Collection<Film> findPopularFilms(Integer count);
 
     List<Film> findDirectorFilms(int directorId, String sortBy);
+
+    Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year);
+
+
 }

@@ -27,10 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -168,7 +165,7 @@ public class FilmDaoImpl implements FilmDao {
         directorStorage.findById(directorId)
                 .orElseThrow(() -> new NoSuchDirectorException(String.format("Director with id = %d not found", directorId)));
 
-        String sqlQuery = sortBy.equals("likes")?GET_DIRECTOR_FILMS_LIKES_SORTED:GET_DIRECTOR_FILMS_YEAR_SORTED;
+        String sqlQuery = sortBy.equals("likes") ? GET_DIRECTOR_FILMS_LIKES_SORTED : GET_DIRECTOR_FILMS_YEAR_SORTED;
 
         try (Stream<Film> stream
                      = jdbcTemplate.getJdbcTemplate().queryForStream(sqlQuery, (rs, rowNum) -> makeFilm(rs), directorId)) {
@@ -178,6 +175,18 @@ public class FilmDaoImpl implements FilmDao {
                 getFilmDirectors(film.getId()).forEach(film::addDirector);
             }).collect(Collectors.toList());
         }
+    }
+
+    @Override
+    public Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year) {
+
+        return jdbcTemplate.getJdbcTemplate().query(GET_THE_MOST_POPULAR_FILMS_WITH_FILTRES, (rs, rowNum) -> makeFilm(rs),
+                        year.orElse(0), year.isPresent(), genreId.orElse(0), genreId.isPresent(), count)
+                .stream().peek(film -> {
+                    getFilmLikes(film.getId()).forEach(film::addLike);
+                    getFilmGenres(film.getId()).forEach(film::addGenre);
+                    getFilmDirectors(film.getId()).forEach(film::addDirector);
+                }).collect(Collectors.toList());
     }
 
     private Collection<User> getFilmLikes(Integer filmId) {
@@ -225,6 +234,7 @@ public class FilmDaoImpl implements FilmDao {
                         ps.setInt(1, film.getId());
                         ps.setInt(2, filmGenres.get(i).getId());
                     }
+
                     @Override
                     public int getBatchSize() {
                         return filmGenres.size();
@@ -241,6 +251,7 @@ public class FilmDaoImpl implements FilmDao {
                         ps.setInt(1, film.getId());
                         ps.setInt(2, directors.get(i).getId());
                     }
+
                     @Override
                     public int getBatchSize() {
                         return directors.size();

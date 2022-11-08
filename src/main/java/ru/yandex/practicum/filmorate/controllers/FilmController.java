@@ -21,6 +21,7 @@ import ru.yandex.practicum.filmorate.validators.ValidationSequence;
 import javax.validation.constraints.Min;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/films")
@@ -44,15 +45,17 @@ public class FilmController {
 
     @DeleteMapping("/{filmId}")
     @Operation(summary = "Delete film by its id")
-    public void removeFilm(@PathVariable Integer filmId) {filmService.removeFilm(filmId);}
+    public void removeFilm(@PathVariable Integer filmId) {
+        filmService.removeFilm(filmId);
+    }
 
-    @GetMapping("/popular")
+/*    @GetMapping("/popular")
     @Operation(summary = "Get a sorted list of films by popularity")
     public Collection<Film> findPopularFilms(
             @RequestParam(defaultValue = "10", required = false) Integer count
     ) {
         return filmService.findPopularFilms(count);
-    }
+    }*/
 
     @PostMapping
     @Operation(summary = "Add a new film to service")
@@ -90,4 +93,22 @@ public class FilmController {
         log.debug("Getting all films by director");
         return filmService.getDirectorFilmsSorted(directorId, sortBy);
     }
+
+    @GetMapping("/popular")
+    @Operation(summary = "Get the most popular films with filter: year, genre")
+    public Collection<Film> getTheMostPopularFilmsWithFilter(
+            @RequestParam(value = "count", defaultValue = "10", required = false) Integer limit,
+            @RequestParam(value = "genreId", required = false) Optional<Integer> genreId,
+            @RequestParam(value = "year", required = false) Optional<Integer> year
+    ) {
+
+        if (genreId.isPresent() || year.isPresent()) {
+            log.debug("Getting the most popular films with filter");
+            return filmService.getTheMostPopularFilmsWithFilter(limit, genreId, year);
+        }
+
+        return filmService.findPopularFilms(limit);
+    }
+
+
 }

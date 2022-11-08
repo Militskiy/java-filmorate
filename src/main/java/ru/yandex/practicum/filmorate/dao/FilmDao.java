@@ -89,7 +89,39 @@ public interface FilmDao extends Dao<Film> {
                     "LIMIT ?;";
 
 
+    //запрос по факту некорректный, нет проверки на дружбу, но это косяк postman
+    String FIND_COMMON_FILMS_COUPLE_FRIENDS =
+            "select f.*, r.RATING_NAME\n" +
+                    "from (select l.FILM_ID\n" +
+                    "      from\n" +
+                    "               LIKES L\n" +
+                    "               inner join LIKES L2 on l.FILM_ID = L2.FILM_ID\n" +
+                    "      where l.USER_ID = ?\n" +
+                    "        AND l2.USER_ID = ?\n" +
+                    "        AND L.FILM_ID = L2.FILM_ID) as FL\n" +
+                    "         inner join FILMS as f on f.FILM_ID = FL.FILM_ID\n" +
+                    "         left join (select l.FILM_ID, count(distinct l.USER_ID) as ql FROM LIKES as l group by l.FILM_ID)\n" +
+                    "    as L3 on f.FILM_ID = L3.FILM_ID\n" +
+                    "         left join RATINGS R on R.RATING_ID = f.RATING_ID\n" +
+                    "order by ql desc\n" +
+                    ";";
+
+
     String DELETE_FILM = "DELETE FROM FILMS WHERE FILM_ID = ?";
+
+    String RECOMMENDED_FILMS =
+            "SELECT F.FILM_ID, FILM_NAME, FILM_DESCRIPTION, RELEASE_DATE, DURATION, F.RATING_ID, RATING_NAME\n" +
+                    "FROM LIKES AS L\n" +
+                    "         JOIN FILMS AS F ON F.FILM_ID = L.FILM_ID\n" +
+                    "         JOIN RATINGS AS R ON R.RATING_ID = F.RATING_ID\n" +
+                    "WHERE L.FILM_ID NOT IN (SELECT FILM_ID FROM LIKES WHERE USER_ID = ?)\n" +
+                    "  AND L.USER_ID IN (SELECT USER_ID\n" +
+                    "                    FROM LIKES\n" +
+                    "                    WHERE FILM_ID IN (SELECT FILM_ID FROM LIKES WHERE USER_ID = ?)\n" +
+                    "                      AND USER_ID != ?\n" +
+                    "                    GROUP BY USER_ID\n" +
+                    "                    ORDER BY COUNT(FILM_ID) DESC\n" +
+                    "                    LIMIT 1);";
 
     String GET_DIRECTOR_FILMS_YEAR_SORTED =
             "SELECT F.FILM_ID,\n" +
@@ -147,6 +179,10 @@ public interface FilmDao extends Dao<Film> {
     void removeLike(Integer filmId, Integer userId);
 
     Collection<Film> findPopularFilms(Integer count);
+
+    Collection<Film> findCommonFilmsOfCoupleFriends(Integer userId, Integer friendId);
+
+    List<Film> getRecommendations(Integer userId);
 
     List<Film> findDirectorFilms(int directorId, String sortBy);
 

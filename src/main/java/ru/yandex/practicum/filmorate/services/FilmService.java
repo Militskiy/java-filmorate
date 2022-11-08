@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.services;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Indexed;
 import org.springframework.stereotype.Service;
@@ -15,19 +14,16 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class FilmService {
     @Qualifier("FilmDaoImpl")
     private final FilmDao filmStorage;
 
     public Collection<Film> findAllFilms() {
-        log.debug("Listing all films");
         return filmStorage.findAll();
     }
 
     public Film createFilm(Film film) {
-        log.debug("Added new film {}", film);
         return filmStorage.create(film);
     }
 
@@ -36,8 +32,7 @@ public class FilmService {
         return filmStorage.update(film);
     }
 
-    public void removeFilm(Integer filmId) {
-        log.info("Film deleted");
+    public void deleteFilm(Integer filmId) {
         filmStorage.removeFilm(filmId);
     }
 
@@ -50,12 +45,15 @@ public class FilmService {
     }
 
     public Collection<Film> findPopularFilms(Integer count) {
-        log.debug("Listing {} popular films", count);
         return filmStorage.findPopularFilms(count);
     }
 
     public Film findFilmById(Integer filmId) {
         return filmStorage.findById(filmId);
+    }
+
+    public Collection<Film> findCommonFilmsOfCoupleFriends(Integer userdId, Integer friendId) {
+        return filmStorage.findCommonFilmsOfCoupleFriends(userdId,friendId);
     }
 
     public List<Film> getDirectorFilmsSorted(int directorId, String sortBy) {

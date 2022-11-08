@@ -66,7 +66,7 @@ public class FilmService {
     public List<Film> search(String query, List<String> searchFilters) {
 
         if (searchFilters.size() > new HashSet<>(searchFilters).size()) {
-            throw new BadArgumentsException("Search request has filter repeats.");
+            throw new BadArgumentsException("Search request has too much filters (max = 2).");
         }
 
         switch (searchFilters.size()) {
@@ -77,13 +77,13 @@ public class FilmService {
                     case (TITLE):
                         return filmStorage.search(query, searchFilters);
                     default:
-                        throw new BadArgumentsException("Incorrect filters. Should be 1 filter: director or title.");
+                        throw new BadArgumentsException("Bad filters request. Should be 1 filter: director or title.");
                 }
             case (2):
                 if (searchFilters.contains(DIRECTOR) && searchFilters.contains(TITLE)) {
                     return filmStorage.search(query, searchFilters);
                 } else {
-                    throw new BadArgumentsException("Incorrect filters. Should be 2 filters: director & title.");
+                    throw new BadArgumentsException("Bad filters request. Should be 2 filters: director & title.");
                 }
             default:
                 throw new BadArgumentsException("Bad search filter parameters, too much filters.");

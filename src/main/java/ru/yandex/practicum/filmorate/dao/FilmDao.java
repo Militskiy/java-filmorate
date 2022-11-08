@@ -168,6 +168,55 @@ public interface FilmDao extends Dao<Film> {
                     "LIMIT ?;";
 
 
+    String SEARCH_BY_DIRECTOR =
+            "SELECT F.*,\n" +
+                    "       R.RATING_NAME\n" +
+                    "FROM FILMS F\n" +
+                    "JOIN DIRECTORS_FILMS DF ON F.FILM_ID = DF.FILM_ID\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN DIRECTORS D ON D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
+                    "WHERE UPPER(D.DIRECTOR_NAME) LIKE UPPER\n" +
+                    "('%" + "chars" + "%')";
+
+    String SEARCH_BY_FILM_NAME =
+            "SELECT F.*,\n" +
+                    "       R.RATING_NAME\n" +
+                    "FROM FILMS F\n" +
+                    "LEFT JOIN RATINGS R ON R.RATING_ID = F.RATING_ID\n" +
+                    "WHERE UPPER(F.FILM_NAME) LIKE UPPER\n" +
+                    "('%" + "chars" + "%')";
+
+    String SQL_QUERY =
+            "SELECT SEARCH.FILM_ID,\n" +
+                    "SEARCH.FILM_NAME,\n" +
+                    "SEARCH.FILM_DESCRIPTION,\n" +
+                    "SEARCH.RELEASE_DATE,\n" +
+                    "SEARCH.DURATION,\n" +
+                    "SEARCH.RATING_ID,\n" +
+                    "SEARCH.RATING_NAME\n" +
+                    "FROM " + "(" + "string" + ") AS SEARCH\n" +
+                    "LEFT JOIN LIKES AS L ON L.FILM_ID = SEARCH.FILM_ID\n" +
+                    "GROUP BY SEARCH.FILM_ID\n" +
+                    "ORDER BY COUNT(L.FILM_ID) DESC";
+
+    String SORTED_FILMS =
+            "SELECT F.FILM_ID,\n" +
+                    "       FILM_NAME,\n" +
+                    "       FILM_DESCRIPTION,\n" +
+                    "       RELEASE_DATE,\n" +
+                    "       DURATION,\n" +
+                    "       F.RATING_ID,\n" +
+                    "       RATING_NAME\n" +
+                    "FROM FILMS F\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
+                    "GROUP BY F.FILM_ID\n" +
+                    "ORDER BY COUNT(L.FILM_ID) DESC\n";
+
+    String UNION = "\nUNION\n";
+    String DIRECTOR = "director";
+    String TITLE = "title";
+
     Film create(Film film);
 
     Film update(Film film);
@@ -189,4 +238,7 @@ public interface FilmDao extends Dao<Film> {
     Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year);
 
 
+
+    List<Film> search(String query, List<String> searchFilters);
+    List<Film> getSortedFilms();
 }

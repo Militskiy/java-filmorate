@@ -112,12 +112,7 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public Collection<Film> findAll() {
-        return jdbcTemplate.getJdbcTemplate().query(FIND_ALL, (rs, rowNum) -> makeFilm(rs))
-                .stream().peek(film -> {
-                    getFilmLikes(film.getId()).forEach(film::addLike);
-                    getFilmGenres(film.getId()).forEach(film::addGenre);
-                    getFilmDirectors(film.getId()).forEach(film::addDirector);
-                }).collect(Collectors.toList());
+        return filmsQueryParameter(FIND_ALL);
     }
 
     @Override
@@ -285,5 +280,37 @@ public class FilmDaoImpl implements FilmDao {
                         return directors.size();
                     }
                 });
+    }
+
+    @Override
+    public List<Film> search(String query, List<String> searchFilters) {
+        StringBuilder sb = new StringBuilder();
+        String searchByDirector = SEARCH_BY_DIRECTOR.replace("chars", query);
+        String searchByFilmName = SEARCH_BY_FILM_NAME.replace("chars", query);
+
+        for (int i = 0; i < searchFilters.size(); i++) {
+            String s = searchFilters.get(i);
+            if (s.equals(DIRECTOR)) sb.append(searchByDirector);
+            if (s.equals(TITLE)) sb.append(searchByFilmName);
+            if (!(i == searchFilters.size() - 1)) sb.append(UNION);
+        }
+
+        String sqlQuery = SQL_QUERY.replace("string", sb);
+        return filmsQueryParameter(sqlQuery);
+    }
+
+    @Override
+    public List<Film> getSortedFilms() {
+        return filmsQueryParameter(SORTED_FILMS);
+    }
+
+    private List<Film> filmsQueryParameter (String sqlQuery) {
+        return jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs))
+                .stream()
+                .peek(film -> {
+                    getFilmLikes(film.getId()).forEach(film::addLike);
+                    getFilmGenres(film.getId()).forEach(film::addGenre);
+                    getFilmDirectors(film.getId()).forEach(film::addDirector);
+                }).collect(Collectors.toList());
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.services.FilmService;
 import ru.yandex.practicum.filmorate.validators.ValidationSequence;
@@ -96,22 +97,27 @@ public class FilmController {
 
     @GetMapping("/director/{directorId}")
     @Operation(summary = "Get all films by director id")
-    public List<Film> getDirectorFilmsSorted(@PathVariable int directorId, @RequestParam(defaultValue = "year") String sortBy) {
+    public List<Film> getDirectorFilmsSorted(@PathVariable int directorId,
+                                             @RequestParam(defaultValue = "year") String sortBy) {
         log.debug("Getting all films by director");
         return filmService.getDirectorFilmsSorted(directorId, sortBy);
     }
 
     @GetMapping("/search")
     @Operation(summary = "Getting films sorted by filters")
-    public List<Film> search(@RequestParam String query, @RequestParam(required = false) List<String> by) {
+    public List<Film> search(@RequestParam(required = false) String query,
+                             @RequestParam(required = false) List<String> by) {
         List<Film> films;
 
-        if (by != null) {
+        if (by != null && query != null) {
             films = filmService.search(query, by);
             log.debug("Getting sorted films by filters");
-        } else {
+        } else if (by == null && query == null) {
             films = filmService.getSortedFilms();
             log.debug("Getting films sorted by popularity without filters");
+        } else {
+            log.warn("Bad filters request. One parameter is null");
+            throw new BadArgumentsException("Bad filters request.");
         }
         return films;
     }

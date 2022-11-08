@@ -185,6 +185,20 @@ public interface FilmDao extends Dao<Film> {
                     "GROUP BY SEARCH.FILM_ID\n" +
                     "ORDER BY COUNT(L.FILM_ID) DESC";
 
+    String SORTED_FILMS =
+            "SELECT F.FILM_ID,\n" +
+                    "       FILM_NAME,\n" +
+                    "       FILM_DESCRIPTION,\n" +
+                    "       RELEASE_DATE,\n" +
+                    "       DURATION,\n" +
+                    "       F.RATING_ID,\n" +
+                    "       RATING_NAME\n" +
+                    "FROM FILMS F\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
+                    "GROUP BY F.FILM_ID\n" +
+                    "ORDER BY COUNT(L.FILM_ID) DESC\n";
+
     String UNION = "\nUNION\n";
     String DIRECTOR = "director";
     String TITLE = "title";
@@ -208,4 +222,5 @@ public interface FilmDao extends Dao<Film> {
     List<Film> findDirectorFilms(int directorId, String sortBy);
 
     List<Film> search(String query, List<String> searchFilters);
+    List<Film> getSortedFilms();
 }

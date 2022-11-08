@@ -103,8 +103,17 @@ public class FilmController {
 
     @GetMapping("/search")
     @Operation(summary = "Getting films sorted by filters")
-    public List<Film> search(@RequestParam String query, @RequestParam List<String> by) {
-        return filmService.search(query, by);
+    public List<Film> search(@RequestParam String query, @RequestParam(required = false) List<String> by) {
+        List<Film> films;
+
+        if (by != null) {
+            films = filmService.search(query, by);
+            log.debug("Getting sorted films by filters");
+        } else {
+            films = filmService.getSortedFilms();
+            log.debug("Getting films sorted by popularity without filters");
+        }
+        return films;
     }
 
     @GetMapping("/common")
@@ -115,6 +124,5 @@ public class FilmController {
     ) {
         return filmService.findCommonFilmsOfCoupleFriends(userId, friendId);
     }
-
 
 }

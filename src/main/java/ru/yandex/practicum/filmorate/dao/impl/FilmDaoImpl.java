@@ -115,12 +115,7 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public Collection<Film> findAll() {
-        return jdbcTemplate.getJdbcTemplate().query(FIND_ALL, (rs, rowNum) -> makeFilm(rs))
-                .stream().peek(film -> {
-                    getFilmLikes(film.getId()).forEach(film::addLike);
-                    getFilmGenres(film.getId()).forEach(film::addGenre);
-                    getFilmDirectors(film.getId()).forEach(film::addDirector);
-                }).collect(Collectors.toList());
+        return filmsQueryParameter(FIND_ALL);
     }
 
     @Override
@@ -291,7 +286,15 @@ public class FilmDaoImpl implements FilmDao {
         }
 
         String sqlQuery = SQL_QUERY.replace("string", sb);
+        return filmsQueryParameter(sqlQuery);
+    }
 
+    @Override
+    public List<Film> getSortedFilms() {
+        return filmsQueryParameter(SORTED_FILMS);
+    }
+
+    private List<Film> filmsQueryParameter (String sqlQuery) {
         return jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs))
                 .stream()
                 .peek(film -> {

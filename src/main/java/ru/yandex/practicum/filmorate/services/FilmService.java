@@ -65,32 +65,32 @@ public class FilmService {
 
     public List<Film> search(String query, List<String> searchFilters) {
 
-        if (searchFilters.size() > 2) {
-            throw new BadArgumentsException("Search filters are out of the request limits (max 2 filters).");
-        }
-
         if (searchFilters.size() > new HashSet<>(searchFilters).size()) {
             throw new BadArgumentsException("Search request has filter repeats.");
         }
 
-        if (searchFilters.size() == 1) {
-            if (!searchFilters.contains(DIRECTOR)) {
-                if (!searchFilters.contains(TITLE)) {
-                    throw new BadArgumentsException("Incorrect filter. Should be - title.");
+        switch (searchFilters.size()) {
+            case (1):
+                switch (searchFilters.get(0)) {
+                    case (DIRECTOR):
+                        return filmStorage.search(query, searchFilters);
+                    case (TITLE):
+                        return filmStorage.search(query, searchFilters);
+                    default:
+                        throw new BadArgumentsException("Incorrect filters. Should be 1 filter: director or title.");
                 }
-            } else if (!searchFilters.contains(TITLE)) {
-                if (!searchFilters.contains(DIRECTOR)) {
-                    throw new BadArgumentsException("Incorrect filter. Should be - director.");
+            case (2):
+                if (searchFilters.contains(DIRECTOR) && searchFilters.contains(TITLE)) {
+                    return filmStorage.search(query, searchFilters);
+                } else {
+                    throw new BadArgumentsException("Incorrect filters. Should be 2 filters: director & title.");
                 }
-            }
+            default:
+                throw new BadArgumentsException("Bad search filter parameters, too much filters.");
         }
+    }
 
-        if (searchFilters.size() == 2) {
-            if (!searchFilters.contains(DIRECTOR) && !searchFilters.contains(TITLE)) {
-                throw new BadArgumentsException("Incorrect filters. Should be - director and title.");
-            }
-        }
-
-        return filmStorage.search(query, searchFilters);
+    public List<Film> getSortedFilms() {
+        return filmStorage.getSortedFilms();
     }
 }

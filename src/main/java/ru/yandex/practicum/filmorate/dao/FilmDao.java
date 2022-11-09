@@ -124,15 +124,15 @@ public interface FilmDao extends Dao<Film> {
                     "ORDER BY COUNT(L.FILM_ID) DESC\n";
 
     String GET_THE_MOST_POPULAR_FILMS_WITH_FILTRES =
-            "select DISTINCT f.*, L3.ql, RATING_NAME\n" +
-                    "from FILMS as f\n" +
-                    "         left join (select l.FILM_ID, count(distinct l.USER_ID) as ql FROM LIKES as l group by l.FILM_ID)\n" +
-                    "    as L3 on f.FILM_ID = L3.FILM_ID\n" +
-                    "         inner join GENRES_FILMS GF on f.FILM_ID = GF.FILM_ID\n" +
-                    "inner join RATINGS R on R.RATING_ID = f.RATING_ID\n" +
-                    "where ((YEAR(f.RELEASE_DATE) = ?) or ?=false)\n" +
-                    "  AND ((gf.GENRE_ID = ?) or ? = false)\n" +
-                    "order by ql desc\n" +
+            "SELECT DISTINCT F.*, LF.QL, RATING_NAME\n" +
+                    "FROM FILMS AS F\n" +
+                    "         LEFT JOIN (SELECT L.FILM_ID, COUNT(DISTINCT L.USER_ID) AS QL FROM LIKES AS L GROUP BY L.FILM_ID)\n" +
+                    "    AS LF on F.FILM_ID = LF.FILM_ID\n" +
+                    "         INNER JOIN GENRES_FILMS GF on f.FILM_ID = GF.FILM_ID\n" +
+                    "INNER JOIN RATINGS R on R.RATING_ID = f.RATING_ID\n" +
+                    "WHERE ((YEAR(F.RELEASE_DATE) = ?) or ?=false)\n" +
+                    "  AND ((GF.GENRE_ID = ?) or ? = false)\n" +
+                    "ORDER BY QL DESC\n" +
                     "LIMIT ?;";
 
 

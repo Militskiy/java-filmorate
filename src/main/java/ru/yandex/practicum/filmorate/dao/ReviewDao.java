@@ -8,6 +8,9 @@ public interface ReviewDao extends Dao<Review> {
     String GET_ALL_REVIEWS =
             "SELECT * FROM REVIEWS ORDER BY USEFUL DESC";
 
+    String GET_TOP_REVIEWS =
+            "SELECT * FROM REVIEWS ORDER BY USEFUL DESC LIMIT ?";
+
     String GET_ALL_REVIEWS_FOR_FILM =
             "SELECT * FROM REVIEWS WHERE FILM_ID = ? ORDER BY USEFUL DESC LIMIT ?";
 
@@ -43,6 +46,8 @@ public interface ReviewDao extends Dao<Review> {
                     "(SELECT REVIEW_ID FROM USERS_REVIEWS WHERE USER_ID = ? AND IS_LIKE = FALSE)";
 
     Collection<Review> findAllForFilm(Integer filmId, Integer count);
+
+    Collection<Review> findTop(Integer count);
 
     Review createReview(Review review);
 

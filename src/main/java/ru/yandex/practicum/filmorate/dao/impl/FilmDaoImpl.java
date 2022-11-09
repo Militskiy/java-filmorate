@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -10,6 +9,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.DirectorDAO;
+import ru.yandex.practicum.filmorate.dao.EventDao;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
@@ -22,6 +22,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,12 +35,12 @@ import java.util.stream.Stream;
 
 @AllArgsConstructor
 @Component("FilmDaoImpl")
-@Slf4j
 public class FilmDaoImpl implements FilmDao {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final UserDao userStorage;
     private final DirectorDAO directorStorage;
+    private final EventDao eventStorage;
 
     @Override
     public Film create(Film film) {
@@ -110,12 +112,7 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public Collection<Film> findAll() {
-        return jdbcTemplate.getJdbcTemplate().query(FIND_ALL, (rs, rowNum) -> makeFilm(rs))
-                .stream().peek(film -> {
-                    getFilmLikes(film.getId()).forEach(film::addLike);
-                    getFilmGenres(film.getId()).forEach(film::addGenre);
-                    getFilmDirectors(film.getId()).forEach(film::addDirector);
-                }).collect(Collectors.toList());
+        return filmsQueryParameter(FIND_ALL);
     }
 
     @Override
@@ -127,12 +124,24 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
+    public List<Film> getRecommendations(Integer userId) {
+        return jdbcTemplate.getJdbcTemplate().query(RECOMMENDED_FILMS,
+                        (rowSet, rowNum) -> makeFilm(rowSet), userId, userId, userId)
+                .stream().peek(film -> {
+            getFilmLikes(film.getId()).forEach(film::addLike);
+            getFilmGenres(film.getId()).forEach(film::addGenre);
+            getFilmDirectors(film.getId()).forEach(film::addDirector);
+        }).collect(Collectors.toList());
+    }
+
+    @Override
     public void addLike(Integer filmId, Integer userId) {
         userStorage.findById(userId);
         if (findById(filmId).getUserLikes()
                 .stream()
                 .noneMatch(user -> user.getId() == userId)) {
             jdbcTemplate.getJdbcTemplate().update(ADD_LIKE, userId, filmId);
+            eventStorage.createEvent(userId, EventType.LIKE, Operation.ADD, filmId);
         } else {
             throw new BadArgumentsException("Film already liked");
         }
@@ -145,6 +154,7 @@ public class FilmDaoImpl implements FilmDao {
                 .stream()
                 .anyMatch(user -> user.getId() == userId)) {
             jdbcTemplate.getJdbcTemplate().update(DELETE_LIKE, filmId, userId);
+            eventStorage.createEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
         } else {
             throw new NoSuchUserException("Film not liked");
         }
@@ -158,6 +168,17 @@ public class FilmDaoImpl implements FilmDao {
                     getFilmGenres(film.getId()).forEach(film::addGenre);
                     getFilmDirectors(film.getId()).forEach(film::addDirector);
                 }).collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<Film> findCommonFilmsOfCoupleFriends(Integer userId, Integer friendId) {
+
+        return jdbcTemplate.getJdbcTemplate().query(FIND_COMMON_FILMS_COUPLE_FRIENDS, (rs, rowNum) -> makeFilm(rs),userId,friendId)
+                .stream().peek(film -> {
+                    getFilmLikes(film.getId()).forEach(film::addLike);
+                    getFilmGenres(film.getId()).forEach(film::addGenre);
+                }).collect(Collectors.toList());
+
     }
 
     @Override
@@ -242,6 +263,8 @@ public class FilmDaoImpl implements FilmDao {
                 });
     }
 
+
+
     private void filmDirectorUpdate(Film film) {
         List<Director> directors = new ArrayList<>(film.getDirectors());
         jdbcTemplate.getJdbcTemplate().batchUpdate(FILM_DIRECTOR_UPDATE,
@@ -257,5 +280,37 @@ public class FilmDaoImpl implements FilmDao {
                         return directors.size();
                     }
                 });
+    }
+
+    @Override
+    public List<Film> search(String query, List<String> searchFilters) {
+        StringBuilder sb = new StringBuilder();
+        String searchByDirector = SEARCH_BY_DIRECTOR.replace("chars", query);
+        String searchByFilmName = SEARCH_BY_FILM_NAME.replace("chars", query);
+
+        for (int i = 0; i < searchFilters.size(); i++) {
+            String s = searchFilters.get(i);
+            if (s.equals(DIRECTOR)) sb.append(searchByDirector);
+            if (s.equals(TITLE)) sb.append(searchByFilmName);
+            if (!(i == searchFilters.size() - 1)) sb.append(UNION);
+        }
+
+        String sqlQuery = SQL_QUERY.replace("string", sb);
+        return filmsQueryParameter(sqlQuery);
+    }
+
+    @Override
+    public List<Film> getSortedFilms() {
+        return filmsQueryParameter(SORTED_FILMS);
+    }
+
+    private List<Film> filmsQueryParameter (String sqlQuery) {
+        return jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs))
+                .stream()
+                .peek(film -> {
+                    getFilmLikes(film.getId()).forEach(film::addLike);
+                    getFilmGenres(film.getId()).forEach(film::addGenre);
+                    getFilmDirectors(film.getId()).forEach(film::addDirector);
+                }).collect(Collectors.toList());
     }
 }

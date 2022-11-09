@@ -26,12 +26,14 @@ public class MpaController {
     @GetMapping
     @Operation(summary = "Get a list of all MPA ratings")
     public Collection<Mpa> findAll() {
+        log.debug("Getting all MPA ratings");
         return mpaService.findAll();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a specific MPA rating by its id")
     public Mpa findMpa(@PathVariable @Min(1) Integer id) {
+        log.debug("Getting rating with id: {}", id);
         return mpaService.findById(id);
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.services.FilmService;
 import ru.yandex.practicum.filmorate.validators.ValidationSequence;
@@ -34,19 +35,22 @@ public class FilmController {
     @GetMapping
     @Operation(summary = "Get all films")
     public Collection<Film> findAllFilms() {
+        log.debug("Getting all films");
         return filmService.findAllFilms();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get film by its id")
     public Film findFilm(@PathVariable @Min(1) Integer id) {
+        log.debug("Getting film with id: {}", id);
         return filmService.findFilmById(id);
     }
 
     @DeleteMapping("/{filmId}")
     @Operation(summary = "Delete film by its id")
     public void removeFilm(@PathVariable Integer filmId) {
-        filmService.removeFilm(filmId);
+        log.debug("Deleting film with id: {}", filmId);
+        filmService.deleteFilm(filmId);
     }
 
 /*    @GetMapping("/popular")
@@ -54,18 +58,21 @@ public class FilmController {
     public Collection<Film> findPopularFilms(
             @RequestParam(defaultValue = "10", required = false) Integer count
     ) {
+        log.debug("Getting {} popular films", count);
         return filmService.findPopularFilms(count);
     }*/
 
     @PostMapping
     @Operation(summary = "Add a new film to service")
     public Film createFilm(@Validated(ValidationSequence.class) @RequestBody Film film) {
+        log.debug("Creating new film {}", film);
         return filmService.createFilm(film);
     }
 
     @PutMapping
     @Operation(summary = "Update a film")
     public Film updateFilm(@Validated(ValidationSequence.class) @RequestBody Film film) {
+        log.debug("Updating film with id: {}", film.getId());
         return filmService.updateFilm(film);
     }
 
@@ -75,6 +82,7 @@ public class FilmController {
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId
     ) {
+        log.debug("Adding user with id: {} like to film with id: {}", userId, id);
         filmService.addLike(id, userId);
     }
 
@@ -84,12 +92,14 @@ public class FilmController {
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId
     ) {
+        log.debug("Removing user with id: {} like from film with id: {}", userId, id);
         filmService.removeLike(id, userId);
     }
 
     @GetMapping("/director/{directorId}")
     @Operation(summary = "Get all films by director id")
-    public List<Film> getDirectorFilmsSorted(@PathVariable int directorId, @RequestParam(defaultValue = "year") String sortBy) {
+    public List<Film> getDirectorFilmsSorted(@PathVariable int directorId,
+                                             @RequestParam(defaultValue = "year") String sortBy) {
         log.debug("Getting all films by director");
         return filmService.getDirectorFilmsSorted(directorId, sortBy);
     }
@@ -110,5 +120,34 @@ public class FilmController {
         return filmService.findPopularFilms(limit);
     }
 
+
+
+    @GetMapping("/search")
+    @Operation(summary = "Getting films sorted by filters")
+    public List<Film> search(@RequestParam(required = false) String query,
+                             @RequestParam(required = false) List<String> by) {
+        List<Film> films;
+
+        if (by != null && query != null) {
+            films = filmService.search(query, by);
+            log.debug("Getting sorted films by filters");
+        } else if (by == null && query == null) {
+            films = filmService.getSortedFilms();
+            log.debug("Getting films sorted by popularity without filters");
+        } else {
+            log.warn("Bad filters request. One parameter is null");
+            throw new BadArgumentsException("Bad filters request.");
+        }
+        return films;
+    }
+
+    @GetMapping("/common")
+    @Operation(summary = "Get a sorted common list of couple friends by popularity")
+    public Collection<Film> findCommonFilmsOfCoupleFriends(
+            @RequestParam(value = "userId",required = true) Integer userId,
+            @RequestParam(value = "friendId", required = true) Integer friendId
+    ) {
+        return filmService.findCommonFilmsOfCoupleFriends(userId, friendId);
+    }
 
 }

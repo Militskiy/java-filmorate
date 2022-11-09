@@ -4,32 +4,32 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-@Data
+@Value
 @Builder(setterPrefix = "with")
 @Jacksonized
 public class Review {
-    private int reviewId;
+    int reviewId;
     @NotNull
     @Schema(type = "string", example = "A good review")
-    private String content;
+    String content;
     @NotNull
     @Schema(type = "boolean", example = "true")
     @JsonProperty(value = "isPositive")
-    private Boolean isPositive;
+    Boolean isPositive;
     @NotNull
     @Schema(type = "integer", example = "1")
-    private Integer userId;
+    Integer userId;
     @NotNull
     @Schema(type = "integer", example = "1")
-    private Integer filmId;
-    private int useful;
+    Integer filmId;
+    int useful;
 
     @JsonIgnore
     public Map<String, Object> toMap() {

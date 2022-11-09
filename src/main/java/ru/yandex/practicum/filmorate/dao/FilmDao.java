@@ -229,16 +229,14 @@ public interface FilmDao extends Dao<Film> {
 
     Collection<Film> findPopularFilms(Integer count);
 
-    Collection<Film> findCommonFilmsOfCoupleFriends(Integer userId, Integer friendId);
+    Collection<Film> findCommonFilms(Integer userId, Integer friendId);
 
-    List<Film> getRecommendations(Integer userId);
+    Collection<Film> getRecommendations(Integer userId);
 
-    List<Film> findDirectorFilms(int directorId, String sortBy);
+    Collection<Film> findDirectorFilms(int directorId, String sortBy);
 
     Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year);
 
-
-
-    List<Film> search(String query, List<String> searchFilters);
-    List<Film> getSortedFilms();
+    Collection<Film> search(String query, List<String> searchFilters);
+    Collection<Film> getSortedFilms();
 }

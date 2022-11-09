@@ -16,7 +16,6 @@ import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchDirectorException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchGenreException;
-import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -29,7 +28,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -102,17 +105,14 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public Film findById(Integer filmId) {
-        return jdbcTemplate.getJdbcTemplate().query(FIND_FILM, (rs, rowNum) -> makeFilm(rs), filmId)
-                .stream().peek(film -> {
-                    getFilmLikes(film.getId()).forEach(film::addLike);
-                    getFilmGenres(film.getId()).forEach(film::addGenre);
-                    getFilmDirectors(film.getId()).forEach(film::addDirector);
-                }).findAny().orElseThrow(() -> new NoSuchFilmException("No Film with such ID: " + filmId));
+        return addFilmFields(jdbcTemplate.getJdbcTemplate().query(FIND_FILM, (rs, rowNum) -> makeFilm(rs), filmId))
+                .stream()
+                .findAny().orElseThrow(() -> new NoSuchFilmException("No Film with such ID: " + filmId));
     }
 
     @Override
     public Collection<Film> findAll() {
-        return filmsQueryParameter(FIND_ALL);
+        return addFilmFields(jdbcTemplate.getJdbcTemplate().query(FIND_ALL, (rs, rowNum) -> makeFilm(rs)));
     }
 
     @Override
@@ -124,14 +124,9 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
-    public List<Film> getRecommendations(Integer userId) {
-        return jdbcTemplate.getJdbcTemplate().query(RECOMMENDED_FILMS,
-                        (rowSet, rowNum) -> makeFilm(rowSet), userId, userId, userId)
-                .stream().peek(film -> {
-            getFilmLikes(film.getId()).forEach(film::addLike);
-            getFilmGenres(film.getId()).forEach(film::addGenre);
-            getFilmDirectors(film.getId()).forEach(film::addDirector);
-        }).collect(Collectors.toList());
+    public Collection<Film> getRecommendations(Integer userId) {
+        return addFilmFields(jdbcTemplate.getJdbcTemplate().query(RECOMMENDED_FILMS,
+                (rowSet, rowNum) -> makeFilm(rowSet), userId, userId, userId));
     }
 
     @Override
@@ -156,58 +151,50 @@ public class FilmDaoImpl implements FilmDao {
             jdbcTemplate.getJdbcTemplate().update(DELETE_LIKE, filmId, userId);
             eventStorage.createEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
         } else {
-            throw new NoSuchUserException("Film not liked");
+            throw new BadArgumentsException("Film not liked");
         }
     }
 
     @Override
     public Collection<Film> findPopularFilms(Integer count) {
-        return jdbcTemplate.getJdbcTemplate().query(FIND_POPULAR_FILMS, (rs, rowNum) -> makeFilm(rs), count)
-                .stream().peek(film -> {
-                    getFilmLikes(film.getId()).forEach(film::addLike);
-                    getFilmGenres(film.getId()).forEach(film::addGenre);
-                    getFilmDirectors(film.getId()).forEach(film::addDirector);
-                }).collect(Collectors.toList());
+        return addFilmFields(
+                jdbcTemplate.getJdbcTemplate().query(FIND_POPULAR_FILMS, (rs, rowNum) -> makeFilm(rs), count));
     }
 
     @Override
-    public Collection<Film> findCommonFilmsOfCoupleFriends(Integer userId, Integer friendId) {
-
-        return jdbcTemplate.getJdbcTemplate().query(FIND_COMMON_FILMS_COUPLE_FRIENDS, (rs, rowNum) -> makeFilm(rs),userId,friendId)
-                .stream().peek(film -> {
-                    getFilmLikes(film.getId()).forEach(film::addLike);
-                    getFilmGenres(film.getId()).forEach(film::addGenre);
-                }).collect(Collectors.toList());
-
+    public Collection<Film> findCommonFilms(Integer userId, Integer friendId) {
+        return addFilmFields(
+                jdbcTemplate.getJdbcTemplate()
+                        .query(FIND_COMMON_FILMS_COUPLE_FRIENDS, (rs, rowNum) -> makeFilm(rs), userId, friendId)
+        );
     }
 
     @Override
-    public List<Film> findDirectorFilms(int directorId, String sortBy) {
+    public Collection<Film> findDirectorFilms(int directorId, String sortBy) {
         directorStorage.findById(directorId)
                 .orElseThrow(() -> new NoSuchDirectorException(String.format("Director with id = %d not found", directorId)));
 
         String sqlQuery = sortBy.equals("likes") ? GET_DIRECTOR_FILMS_LIKES_SORTED : GET_DIRECTOR_FILMS_YEAR_SORTED;
 
         try (Stream<Film> stream
-                     = jdbcTemplate.getJdbcTemplate().queryForStream(sqlQuery, (rs, rowNum) -> makeFilm(rs), directorId)) {
-            return stream.peek(film -> {
-                getFilmLikes(film.getId()).forEach(film::addLike);
-                getFilmGenres(film.getId()).forEach(film::addGenre);
-                getFilmDirectors(film.getId()).forEach(film::addDirector);
-            }).collect(Collectors.toList());
+                     = jdbcTemplate.getJdbcTemplate()
+                .queryForStream(sqlQuery, (rs, rowNum) -> makeFilm(rs), directorId)) {
+            return addFilmFields(stream.collect(Collectors.toList()));
         }
     }
 
     @Override
-    public Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year) {
+    public Collection<Film> getTheMostPopularFilmsWithFilter(
+            int count, Optional<Integer> genreId, Optional<Integer> year
+    ) {
+        return addFilmFields(jdbcTemplate.getJdbcTemplate()
+                .query(GET_THE_MOST_POPULAR_FILMS_WITH_FILTRES, (rs, rowNum) -> makeFilm(rs),
+                        year.orElse(0), year.isPresent(), genreId.orElse(0), genreId.isPresent(), count));
+    }
 
-        return jdbcTemplate.getJdbcTemplate().query(GET_THE_MOST_POPULAR_FILMS_WITH_FILTRES, (rs, rowNum) -> makeFilm(rs),
-                        year.orElse(0), year.isPresent(), genreId.orElse(0), genreId.isPresent(), count)
-                .stream().peek(film -> {
-                    getFilmLikes(film.getId()).forEach(film::addLike);
-                    getFilmGenres(film.getId()).forEach(film::addGenre);
-                    getFilmDirectors(film.getId()).forEach(film::addDirector);
-                }).collect(Collectors.toList());
+    @Override
+    public Collection<Film> getSortedFilms() {
+        return addFilmFields(jdbcTemplate.getJdbcTemplate().query(SORTED_FILMS, (rs, rowNum) -> makeFilm(rs)));
     }
 
     private Collection<User> getFilmLikes(Integer filmId) {
@@ -264,7 +251,6 @@ public class FilmDaoImpl implements FilmDao {
     }
 
 
-
     private void filmDirectorUpdate(Film film) {
         List<Director> directors = new ArrayList<>(film.getDirectors());
         jdbcTemplate.getJdbcTemplate().batchUpdate(FILM_DIRECTOR_UPDATE,
@@ -283,7 +269,7 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
-    public List<Film> search(String query, List<String> searchFilters) {
+    public Collection<Film> search(String query, List<String> searchFilters) {
         StringBuilder sb = new StringBuilder();
         String searchByDirector = SEARCH_BY_DIRECTOR.replace("chars", query);
         String searchByFilmName = SEARCH_BY_FILM_NAME.replace("chars", query);
@@ -296,16 +282,12 @@ public class FilmDaoImpl implements FilmDao {
         }
 
         String sqlQuery = SQL_QUERY.replace("string", sb);
-        return filmsQueryParameter(sqlQuery);
+        return addFilmFields(jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs)));
     }
 
-    @Override
-    public List<Film> getSortedFilms() {
-        return filmsQueryParameter(SORTED_FILMS);
-    }
 
-    private List<Film> filmsQueryParameter (String sqlQuery) {
-        return jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs))
+    private Collection<Film> addFilmFields(Collection<Film> films) {
+        return films
                 .stream()
                 .peek(film -> {
                     getFilmLikes(film.getId()).forEach(film::addLike);

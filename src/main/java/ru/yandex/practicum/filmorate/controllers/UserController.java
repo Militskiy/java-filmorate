@@ -20,7 +20,6 @@ import ru.yandex.practicum.filmorate.services.UserService;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import java.util.Collection;
-import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -114,9 +113,9 @@ public class UserController {
     }
 
     @GetMapping("/{id}/recommendations")
-    @Operation(summary = "Recommendations for films to watch")
-    public List<Film> getRecommendations(@PathVariable Integer id) {
-        log.debug("Getting film recommendations for user with id: {}", id);
+    @Operation(summary = "Get a list of film recommendations to watch")
+    public Collection<Film> getRecommendations(@PathVariable Integer id) {
+        log.debug("Getting a list of film recommendations for user with id: {}", id);
         return userService.getRecommendations(id);
     }
 }

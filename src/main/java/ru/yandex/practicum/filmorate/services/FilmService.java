@@ -2,12 +2,9 @@ package ru.yandex.practicum.filmorate.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Indexed;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
-import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
-import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
@@ -41,11 +38,11 @@ public class FilmService {
         filmStorage.removeFilm(filmId);
     }
 
-    public void addLike(Integer filmId, Integer userId) throws NoSuchFilmException, NoSuchUserException {
+    public void addLike(Integer filmId, Integer userId) {
         filmStorage.addLike(filmId, userId);
     }
 
-    public void removeLike(Integer filmId, Integer userId) throws NoSuchFilmException, NoSuchUserException {
+    public void removeLike(Integer filmId, Integer userId) {
         filmStorage.removeLike(filmId, userId);
     }
 
@@ -57,22 +54,22 @@ public class FilmService {
         return filmStorage.findById(filmId);
     }
 
-    public Collection<Film> findCommonFilmsOfCoupleFriends(Integer userdId, Integer friendId) {
-        return filmStorage.findCommonFilmsOfCoupleFriends(userdId,friendId);
+    public Collection<Film> findCommonFilms(Integer userId, Integer friendId) {
+        return filmStorage.findCommonFilms(userId, friendId);
     }
 
-    public List<Film> getDirectorFilmsSorted(int directorId, String sortBy) {
+    public Collection<Film> getDirectorFilmsSorted(int directorId, String sortBy) {
         return filmStorage.findDirectorFilms(directorId, sortBy);
     }
 
-    public Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year) {
+    public Collection<Film> getTheMostPopularFilmsWithFilter(
+            int count, Optional<Integer> genreId, Optional<Integer> year
+    ) {
         return filmStorage.getTheMostPopularFilmsWithFilter(count, genreId, year);
     }
 
 
-
-
-    public List<Film> search(String query, List<String> searchFilters) {
+    public Collection<Film> search(String query, List<String> searchFilters) {
 
         if (searchFilters.size() > new HashSet<>(searchFilters).size()) {
             throw new BadArgumentsException("Search request has too much filters (max = 2).");
@@ -82,7 +79,6 @@ public class FilmService {
             case (1):
                 switch (searchFilters.get(0)) {
                     case (DIRECTOR):
-                        return filmStorage.search(query, searchFilters);
                     case (TITLE):
                         return filmStorage.search(query, searchFilters);
                     default:
@@ -99,7 +95,7 @@ public class FilmService {
         }
     }
 
-    public List<Film> getSortedFilms() {
+    public Collection<Film> getSortedFilms() {
         return filmStorage.getSortedFilms();
     }
 }

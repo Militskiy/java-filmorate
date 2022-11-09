@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -55,7 +54,7 @@ public class UserService {
         return userStorage.findCommonFriends(userId, otherId);
     }
 
-    public List<Film> getRecommendations(Integer userId) {
+    public Collection<Film> getRecommendations(Integer userId) {
         return filmStorage.getRecommendations(userId);
     }
 

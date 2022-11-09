@@ -249,9 +249,9 @@ public class FilmControllerTest implements TestJsons {
 
     @Test
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void tryRemoveLikeNotFound() throws Exception {
+    void tryRemoveLikeBadRequest() throws Exception {
         this.mockMvc.perform(delete("/films/1/like/1"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
     }
 
     @Test

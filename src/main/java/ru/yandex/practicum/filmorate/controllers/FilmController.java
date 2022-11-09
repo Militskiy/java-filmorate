@@ -90,8 +90,10 @@ public class FilmController {
 
     @GetMapping("/director/{directorId}")
     @Operation(summary = "Get all films by director id")
-    public List<Film> getDirectorFilmsSorted(@PathVariable int directorId,
-                                             @RequestParam(defaultValue = "year") String sortBy) {
+    public Collection<Film> getDirectorFilmsSorted(
+            @PathVariable int directorId,
+            @RequestParam(defaultValue = "year") String sortBy
+    ) {
         log.debug("Getting all films by director");
         return filmService.getDirectorFilmsSorted(directorId, sortBy);
     }
@@ -100,8 +102,8 @@ public class FilmController {
     @Operation(summary = "Get the most popular films with filter: year, genre")
     public Collection<Film> getTheMostPopularFilmsWithFilter(
             @RequestParam(value = "count", defaultValue = "10", required = false) Integer limit,
-            @RequestParam(value = "genreId", required = false) Optional<Integer> genreId,
-            @RequestParam(value = "year", required = false) Optional<Integer> year
+            @RequestParam(value = "genreId") Optional<Integer> genreId,
+            @RequestParam(value = "year") Optional<Integer> year
     ) {
 
         if (genreId.isPresent() || year.isPresent()) {
@@ -113,12 +115,13 @@ public class FilmController {
     }
 
 
-
     @GetMapping("/search")
     @Operation(summary = "Getting films sorted by filters")
-    public List<Film> search(@RequestParam(required = false) String query,
-                             @RequestParam(required = false) List<String> by) {
-        List<Film> films;
+    public Collection<Film> search(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) List<String> by
+    ) {
+        Collection<Film> films;
 
         if (by != null && query != null) {
             films = filmService.search(query, by);
@@ -127,19 +130,18 @@ public class FilmController {
             films = filmService.getSortedFilms();
             log.debug("Getting films sorted by popularity without filters");
         } else {
-            log.warn("Bad filters request. One parameter is null");
+            log.debug("Bad filters request. One parameter is null");
             throw new BadArgumentsException("Bad filters request.");
         }
         return films;
     }
 
     @GetMapping("/common")
-    @Operation(summary = "Get a sorted common list of couple friends by popularity")
-    public Collection<Film> findCommonFilmsOfCoupleFriends(
-            @RequestParam(value = "userId",required = true) Integer userId,
-            @RequestParam(value = "friendId", required = true) Integer friendId
+    @Operation(summary = "Get a film list of common films between two users, sorted by popularity")
+    public Collection<Film> findCommonFilmList(
+            @RequestParam(value = "userId") Integer userId,
+            @RequestParam(value = "friendId") Integer friendId
     ) {
-        return filmService.findCommonFilmsOfCoupleFriends(userId, friendId);
+        return filmService.findCommonFilms(userId, friendId);
     }
-
 }

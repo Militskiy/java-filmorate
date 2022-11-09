@@ -53,14 +53,6 @@ public class FilmController {
         filmService.deleteFilm(filmId);
     }
 
-/*    @GetMapping("/popular")
-    @Operation(summary = "Get a sorted list of films by popularity")
-    public Collection<Film> findPopularFilms(
-            @RequestParam(defaultValue = "10", required = false) Integer count
-    ) {
-        log.debug("Getting {} popular films", count);
-        return filmService.findPopularFilms(count);
-    }*/
 
     @PostMapping
     @Operation(summary = "Add a new film to service")

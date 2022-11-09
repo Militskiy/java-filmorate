@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Indexed;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
@@ -12,6 +13,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.dao.FilmDao.DIRECTOR;
 import static ru.yandex.practicum.filmorate.dao.FilmDao.TITLE;
@@ -62,6 +64,13 @@ public class FilmService {
     public List<Film> getDirectorFilmsSorted(int directorId, String sortBy) {
         return filmStorage.findDirectorFilms(directorId, sortBy);
     }
+
+    public Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year) {
+        return filmStorage.getTheMostPopularFilmsWithFilter(count, genreId, year);
+    }
+
+
+
 
     public List<Film> search(String query, List<String> searchFilters) {
 

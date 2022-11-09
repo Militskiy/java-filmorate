@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface FilmDao extends Dao<Film> {
 
@@ -154,6 +155,19 @@ public interface FilmDao extends Dao<Film> {
                     "GROUP BY F.FILM_ID\n" +
                     "ORDER BY COUNT(L.FILM_ID) DESC\n";
 
+    String GET_THE_MOST_POPULAR_FILMS_WITH_FILTRES =
+            "SELECT DISTINCT F.*, LF.QL, RATING_NAME\n" +
+                    "FROM FILMS AS F\n" +
+                    "         LEFT JOIN (SELECT L.FILM_ID, COUNT(DISTINCT L.USER_ID) AS QL FROM LIKES AS L GROUP BY L.FILM_ID)\n" +
+                    "    AS LF on F.FILM_ID = LF.FILM_ID\n" +
+                    "         INNER JOIN GENRES_FILMS GF on f.FILM_ID = GF.FILM_ID\n" +
+                    "INNER JOIN RATINGS R on R.RATING_ID = f.RATING_ID\n" +
+                    "WHERE ((YEAR(F.RELEASE_DATE) = ?) or ?=false)\n" +
+                    "  AND ((GF.GENRE_ID = ?) or ? = false)\n" +
+                    "ORDER BY QL DESC\n" +
+                    "LIMIT ?;";
+
+
     String SEARCH_BY_DIRECTOR =
             "SELECT F.*,\n" +
                     "       R.RATING_NAME\n" +
@@ -220,6 +234,10 @@ public interface FilmDao extends Dao<Film> {
     List<Film> getRecommendations(Integer userId);
 
     List<Film> findDirectorFilms(int directorId, String sortBy);
+
+    Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year);
+
+
 
     List<Film> search(String query, List<String> searchFilters);
     List<Film> getSortedFilms();

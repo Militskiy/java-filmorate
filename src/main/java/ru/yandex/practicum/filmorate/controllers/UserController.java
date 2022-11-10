@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,14 +14,18 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.filmorate.model.Event;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.dto.EventDto;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.dto.mappers.EventMapper;
+import ru.yandex.practicum.filmorate.dto.mappers.FilmMapper;
+import ru.yandex.practicum.filmorate.dto.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.services.UserService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -33,16 +39,21 @@ public class UserController {
 
     @GetMapping
     @Operation(summary = "Get a list of all users")
-    public Collection<User> findAllUsers() {
+    public ResponseEntity<Collection<UserDto>> findAllUsers() {
         log.debug("Sending user list");
-        return userService.findAllUsers();
+        return ResponseEntity.ok(
+                userService.findAllUsers()
+                        .stream()
+                        .map(UserMapper.INSTANCE::userToUserDto)
+                        .collect(Collectors.toList())
+        );
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a user by its id")
-    public User findUser(@PathVariable @Min(1) Integer id) {
+    public ResponseEntity<UserDto> findUser(@PathVariable @Min(1) Integer id) {
         log.debug("Getting user with id: {}", id);
-        return userService.findUserById(id);
+        return ResponseEntity.ok(UserMapper.INSTANCE.userToUserDto(userService.findUserById(id)));
     }
 
     @DeleteMapping("/{userId}")
@@ -54,42 +65,63 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     @Operation(summary = "Get a list of specific user friends")
-    public Collection<User> findFriends(@PathVariable @Min(1) Integer id) {
+    public ResponseEntity<Collection<UserDto>> findFriends(@PathVariable @Min(1) Integer id) {
         log.debug("Getting friend list for user with id: {}", id);
-        return userService.findFriends(id);
+        return ResponseEntity.ok(
+                userService.findFriends(id)
+                        .stream()
+                        .map(UserMapper.INSTANCE::userToUserDto)
+                        .collect(Collectors.toList())
+        );
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     @Operation(summary = "Get a list of user's common friends with another user")
-    public Collection<User> findCommonFriends(
+    public ResponseEntity<Collection<UserDto>> findCommonFriends(
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer otherId
     ) {
         log.debug("Getting common friends for users with ids {} and {}", id, otherId);
-        return userService.findCommonFriends(id, otherId);
+        return ResponseEntity.ok(
+                userService.findCommonFriends(id, otherId)
+                        .stream()
+                        .map(UserMapper.INSTANCE::userToUserDto)
+                        .collect(Collectors.toList())
+        );
     }
 
     @GetMapping("/{id}/feed")
     @Operation(summary = "Get user event feed")
-    public Collection<Event> findUserFeed(
+    public ResponseEntity<Collection<EventDto>> findUserFeed(
             @PathVariable @Min(1) Integer id
     ) {
         log.debug("Getting feed for user with id: {}", id);
-        return userService.findFeed(id);
+        return ResponseEntity.ok(
+                userService.findFeed(id)
+                        .stream()
+                        .map(EventMapper.INSTANCE::eventToEventDto)
+                        .collect(Collectors.toList())
+        );
     }
 
     @PostMapping
     @Operation(summary = "Creates a user")
-    public User createUser(@Valid @RequestBody User user) {
-        log.debug("Creating new user: {}", user);
-        return userService.createUser(user);
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
+        log.debug("Creating new user: {}", userDto);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(UserMapper.INSTANCE.userToUserDto(
+                        userService.createUser(UserMapper.INSTANCE.userDtoToUser(userDto))
+                ));
     }
 
     @PutMapping
     @Operation(summary = "Updates a user")
-    public User updateUser(@Valid @RequestBody User user) {
-        log.debug("Updating user with ID: {}", user.getId());
-        return userService.updateUser(user);
+    public ResponseEntity<UserDto> updateUser(@Valid @RequestBody UserDto userDto) {
+        log.debug("Updating user with ID: {}", userDto.getId());
+        return ResponseEntity.ok(
+                UserMapper.INSTANCE.userToUserDto(userService.updateUser(UserMapper.INSTANCE.userDtoToUser(userDto)))
+        );
     }
 
     @PutMapping("/{id}/friends/{friendId}")
@@ -114,8 +146,13 @@ public class UserController {
 
     @GetMapping("/{id}/recommendations")
     @Operation(summary = "Get a list of film recommendations to watch")
-    public Collection<Film> getRecommendations(@PathVariable Integer id) {
+    public ResponseEntity<Collection<FilmDto>> getRecommendations(@PathVariable Integer id) {
         log.debug("Getting a list of film recommendations for user with id: {}", id);
-        return userService.getRecommendations(id);
+        return ResponseEntity.ok(
+                userService.getRecommendations(id)
+                        .stream()
+                        .map(FilmMapper.INSTANCE::filmToFilmDto)
+                        .collect(Collectors.toList())
+        );
     }
 }

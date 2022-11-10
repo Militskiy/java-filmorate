@@ -9,12 +9,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchDirectorException;
 import ru.yandex.practicum.filmorate.model.Director;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,36 +31,23 @@ class DirectorControllerTest {
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
-    @Autowired
-    private DirectorController directorController;
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/restart.sql"})
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void getDirectors() throws Exception {
-
-        Director director1 = directorController.createDirector(
-                new Director("Director 1"));
-        Director director2 = directorController.createDirector(
-                new Director("Director 2"));
-        String list = objectMapper.writeValueAsString(List.of(director1, director2));
-
         mockMvc.perform(
                         get("/directors"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(list));
+                .andExpect(content().json("[{\"id\":1,\"name\":\"Director 1\"}]"));
     }
 
     @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void getDirector() throws Exception {
-        Director director = directorController.createDirector(
-                new Director("Director 1"));
-
-        String json = objectMapper.writeValueAsString(director);
-
         mockMvc.perform(
-                        get("/directors/" + director.getId()))
+                        get("/directors/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(json));
+                .andExpect(content().json("{\"id\":1,\"name\":\"Director 1\"}"));
     }
 
     @Test
@@ -78,25 +63,22 @@ class DirectorControllerTest {
     @Sql(scripts = {"file:assets/scripts/restart.sql"})
     void createDirector() throws Exception {
 
-        Director director = new Director("Director 1");
+        DirectorDto director = DirectorDto.builder().name("Director 1").build();
         mockMvc.perform(
                         post("/directors")
                                 .content(objectMapper.writeValueAsString(director))
                                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.name").value("Director 1"));
-
-        Director result = directorController.getDirector(1);
-        assertEquals(director.getName(), result.getName());
     }
 
     @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void updateDirector() throws Exception {
 
-        Director director = directorController.createDirector(new Director("Director 1"));
+        DirectorDto director = DirectorDto.builder().id(1).name("Director 2").build();
 
-        director.setName("Director 2");
         mockMvc.perform(
                         put("/directors")
                                 .content(objectMapper.writeValueAsString(director))
@@ -104,11 +86,6 @@ class DirectorControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(director.getId()))
                 .andExpect(jsonPath("$.name").value("Director 2"));
-
-        Director result = directorController.getDirector(director.getId());
-
-        assertEquals(director.getName(), result.getName());
-
     }
 
     @Test
@@ -126,21 +103,15 @@ class DirectorControllerTest {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/restart.sql"})
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void deleteDirector() throws Exception {
-        Director director1 = directorController.createDirector(
-                new Director("Director 1"));
-        Director director2 = directorController.createDirector(
-                new Director("Director 2"));
-
         mockMvc.perform(
-                        delete("/directors/" + director2.getId()))
+                        delete("/directors/1"))
                 .andExpect(status().isOk());
-
-
-        List<Director> result = directorController.getDirectors();
-        assertEquals(1, result.size());
-        assertEquals(director1.getId(), result.get(0).getId());
+        this.mockMvc.perform(
+                get("/directors"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 
     @Test

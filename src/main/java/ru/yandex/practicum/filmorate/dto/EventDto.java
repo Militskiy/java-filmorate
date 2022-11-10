@@ -1,5 +1,6 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
@@ -11,8 +12,9 @@ import java.util.Date;
 @Value
 @Builder
 @Jacksonized
-public class Event {
+public class EventDto {
     Integer eventId;
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER)
     Date timestamp;
     Integer userId;
     EventType eventType;

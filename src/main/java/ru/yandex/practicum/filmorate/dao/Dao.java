@@ -22,7 +22,13 @@ public interface Dao<T> {
         String login = rs.getString("user_login");
         String name = rs.getString("user_name");
         LocalDate birthday = Objects.requireNonNull(rs.getDate("birthday")).toLocalDate();
-        return new User(id, email, login, name, birthday);
+        return User.builder()
+                .id(id)
+                .email(email)
+                .login(login)
+                .name(name)
+                .birthday(birthday)
+                .build();
     }
 
     default Genre makeGenre(ResultSet rs) throws SQLException {

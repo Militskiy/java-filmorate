@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.DirectorDAO;
 import ru.yandex.practicum.filmorate.dao.EventDao;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
+import ru.yandex.practicum.filmorate.dao.GenreDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchDirectorException;
@@ -44,6 +45,7 @@ public class FilmDaoImpl implements FilmDao {
     private final UserDao userStorage;
     private final DirectorDAO directorStorage;
     private final EventDao eventStorage;
+    private final GenreDao genreStorage;
 
     @Override
     public Film create(Film film) {
@@ -51,7 +53,10 @@ public class FilmDaoImpl implements FilmDao {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         getFilmParameters(parameters, film);
-
+        film.getDirectors().forEach(director -> directorStorage.findById(director.getId()).orElseThrow(
+                () -> new NoSuchDirectorException("No such director")
+        ));
+        film.getGenres().forEach(genre -> genreStorage.findById(genre.getId()));
         jdbcTemplate.update(CREATE_FILM, parameters, keyHolder, new String[]{"FILM_ID"});
         int id = Objects.requireNonNull(keyHolder.getKey()).intValue();
         film.setId(id);
@@ -76,6 +81,10 @@ public class FilmDaoImpl implements FilmDao {
     public Film update(Film film) {
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         getFilmParameters(parameters, film);
+        film.getDirectors().forEach(director -> directorStorage.findById(director.getId()).orElseThrow(
+                () -> new NoSuchDirectorException("No such director")
+        ));
+        film.getGenres().forEach(genre -> genreStorage.findById(genre.getId()));
         if (jdbcTemplate.update(UPDATE_FILM_QUERY, parameters) == 1) {
             if (film.getGenres().size() > 0) {
                 try {

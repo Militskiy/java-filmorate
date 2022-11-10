@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.bytebuddy.utility.RandomString;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -13,17 +12,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import ru.yandex.practicum.filmorate.dto.DirectorDto;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.GenreDto;
+import ru.yandex.practicum.filmorate.dto.MpaDto;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchFilmException;
-import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -49,29 +47,13 @@ public class FilmControllerTest implements TestJsons {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private FilmController filmController;
-    @Autowired
-    private DirectorController directorController;
-
     @Test
     @Sql(scripts = {"file:assets/scripts/restart.sql"})
     void shouldFindAllFilms() throws Exception {
-        Director director = directorController.createDirector(new Director("Director 1"));
-        Film film1 = new Film("name", "1".repeat(200), TEST_DATE, 1, new Mpa(1, "G"));
-        film1.addDirector(director);
-        Film film2 = new Film("name", null, TEST_DATE, 1, new Mpa(1, "G"));
-        film2.addDirector(director);
-        Film film3 = new Film("name", "", TEST_DATE, 1, new Mpa(1, "G"));
-        film3.addDirector(director);
-        film1 = filmController.createFilm(film1);
-        film2 = filmController.createFilm(film2);
-        film3 = filmController.createFilm(film3);
-        String listBody = objectMapper.writeValueAsString(List.of(film1, film2, film3));
         this.mockMvc.perform(
                         get("/films"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(listBody));
+                .andExpect(content().json("[]"));
     }
 
     @Test
@@ -85,20 +67,33 @@ public class FilmControllerTest implements TestJsons {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/restart.sql"})
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void shouldCreateFilm() throws Exception {
-        Director director = directorController.createDirector(new Director("Director 1"));
-        Film film = new Film("name", "description", TEST_DATE, 1, new Mpa(1, "G"));
-        film.addDirector(director);
+        FilmDto film = FilmDto.builder()
+                .name("name")
+                .description("description")
+                .releaseDate(TEST_DATE)
+                .duration(1)
+                .mpa(MpaDto.builder().id(1).name("G").build())
+                .director(DirectorDto.builder().id(1).name("Director 1").build())
+                .build();
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
                         post("/films").content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
-        String listBody = objectMapper.writeValueAsString(filmController.findAllFilms());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(4));
         this.mockMvc.perform(
-                        get("/films"))
-                .andExpect(content().json(listBody));
+                        get("/films/4"))
+                .andExpect(content().json("{" +
+                        "\"id\":4," +
+                        "\"name\":\"name\"," +
+                        "\"description\":\"description\"," +
+                        "\"releaseDate\":\"1895-12-28\"," +
+                        "\"duration\":1," +
+                        "\"mpa\":{\"id\":1,\"name\":\"G\"}," +
+                        "\"genres\":[]," +
+                        "\"userLikes\":[]," +
+                        "\"directors\":[{\"id\":1,\"name\":\"Director 1\"}]}"));
     }
 
     @Test
@@ -184,31 +179,21 @@ public class FilmControllerTest implements TestJsons {
     }
 
     @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void createsAndUpdatesFilm() throws Exception {
-        Director director = directorController.createDirector(new Director(1, "Director 1"));
-        Film film = new Film(
-                "name",
-                RandomString.make(200),
-                TEST_DATE,
-                1,
-                new Mpa(1, "G")
-        );
-        film.addDirector(director);
-
-        filmController.createFilm(film);
-        Film updatedFilm = new Film(
-                film.getId(),
-                "updated",
-                RandomString.make(1),
-                TEST_DATE,
-                2,
-                new Mpa(1, "G")
-        );
-        film.removeDirector(director);
-        String body = objectMapper.writeValueAsString(updatedFilm);
+        FilmDto film = FilmDto.builder()
+                .id(2)
+                .name("updated")
+                .description("description")
+                .releaseDate(TEST_DATE)
+                .duration(1)
+                .mpa(MpaDto.builder().id(1).name("G").build())
+                .director(DirectorDto.builder().id(1).name("Director 1").build())
+                .build();
+        String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(put("/films").content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(body));
+                .andExpect(content().json(UPDATED_TEST_FILM));
     }
 
     @Test
@@ -223,28 +208,18 @@ public class FilmControllerTest implements TestJsons {
     void shouldAddLikeToFilmWithId1() throws Exception {
         this.mockMvc.perform(put("/films/1/like/1"))
                 .andExpect(status().isOk());
-        assertEquals("" +
-                "[User(id=3, " +
-                "email=email3@test.com, " +
-                "login=login3, " +
-                "name=name3, " +
-                "birthday=2022-10-01, " +
-                "friends=[]), " +
-                "User(id=1, " +
-                "email=email1@test.com, " +
-                "login=login1, " +
-                "name=name1, " +
-                "birthday=2022-10-01, " +
-                "friends=[])]",
-                filmController.findFilm(1).getUserLikes().toString()
-        );
+        this.mockMvc.perform(get("/films/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(TEST_FILM_1_WITH_LIKE));
     }
     @Test
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void shouldRemoveLikeFromFilmWithId1() throws Exception {
         this.mockMvc.perform(delete("/films/1/like/3"))
                 .andExpect(status().isOk());
-        Assertions.assertEquals(Set.of(), filmController.findFilm(1).getUserLikes());
+        this.mockMvc.perform(get("/films/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(TEST_FILM_1_REMOVED_LIKE));
     }
 
     @Test
@@ -263,33 +238,78 @@ public class FilmControllerTest implements TestJsons {
 
     @Test
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldRemove5thGenreFromFilm1() throws Exception {
-        Film film = filmController.findFilm(1);
-        film.removeGenre(new Genre(5, "Документальный"));
-        String json = objectMapper.writeValueAsString(film);
-        this.mockMvc.perform(put("/films").content(json).contentType(MediaType.APPLICATION_JSON))
+    void shouldRemoveGenreFromFilm4() throws Exception {
+        FilmDto film = FilmDto.builder()
+                .name("name")
+                .description("description")
+                .releaseDate(TEST_DATE)
+                .duration(1)
+                .mpa(MpaDto.builder().id(1).name("G").build())
+                .director(DirectorDto.builder().id(1).name("Director 1").build())
+                .genre(GenreDto.builder().id(1).build())
+                .build();
+        String filmBody = objectMapper.writeValueAsString(film);
+        FilmDto updatedFilm = FilmDto.builder()
+                .id(4)
+                .name("name")
+                .description("description")
+                .releaseDate(TEST_DATE)
+                .duration(1)
+                .mpa(MpaDto.builder().id(1).name("G").build())
+                .director(DirectorDto.builder().id(1).name("Director 1").build())
+                .build();
+        String updatedFilmBody = objectMapper.writeValueAsString(updatedFilm);
+        this.mockMvc.perform(post("/films").content(filmBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+        this.mockMvc.perform(put("/films").content(updatedFilmBody).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(json));
+                .andExpect(content().json(updatedFilmBody));
     }
 
     @Test
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void shouldAddGenreToFilm() throws Exception {
-        Film film = filmController.findFilm(3);
-        film.addGenre(new Genre(5, "Документальный"));
-        String json = objectMapper.writeValueAsString(film);
-        this.mockMvc.perform(put("/films").content(json).contentType(MediaType.APPLICATION_JSON))
+        FilmDto film = FilmDto.builder()
+                .name("name")
+                .description("description")
+                .releaseDate(TEST_DATE)
+                .duration(1)
+                .mpa(MpaDto.builder().id(1).name("G").build())
+                .director(DirectorDto.builder().id(1).name("Director 1").build())
+                .build();
+        String filmBody = objectMapper.writeValueAsString(film);
+        FilmDto updatedFilm = FilmDto.builder()
+                .id(4)
+                .name("name")
+                .description("description")
+                .releaseDate(TEST_DATE)
+                .duration(1)
+                .mpa(MpaDto.builder().id(1).name("G").build())
+                .director(DirectorDto.builder().id(1).name("Director 1").build())
+                .genre(GenreDto.builder().id(1).name("Комедия").build())
+                .build();
+        String updatedFilmBody = objectMapper.writeValueAsString(updatedFilm);
+        this.mockMvc.perform(post("/films").content(filmBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+        this.mockMvc.perform(put("/films").content(updatedFilmBody).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(json));
+                .andExpect(content().json(updatedFilmBody));
     }
 
     @Test
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldThrowBadRequestWhenAddingWrongGenre() throws Exception {
-        Film film = filmController.findFilm(3);
-        film.addGenre(new Genre(10, "No such genre"));
-        String json = objectMapper.writeValueAsString(film);
-        this.mockMvc.perform(put("/films").content(json).contentType(MediaType.APPLICATION_JSON))
+    void shouldThrowNotFoundWhenAddingWrongGenre() throws Exception {
+        FilmDto film = FilmDto.builder()
+                .name("name")
+                .description("description")
+                .releaseDate(TEST_DATE)
+                .duration(1)
+                .mpa(MpaDto.builder().id(1).name("G").build())
+                .director(DirectorDto.builder().id(1).name("Director 1").build())
+                .genre(GenreDto.builder().id(99).build())
+                .build();
+        String filmBody = objectMapper.writeValueAsString(film);
+        this.mockMvc.perform(post("/films").content(filmBody).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
@@ -297,26 +317,12 @@ public class FilmControllerTest implements TestJsons {
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void shouldListDirectorFilms() throws Exception {
 
-        Film film1 = filmController.findFilm(1);
-        Film film2 = filmController.findFilm(2);
-        Film film3 = filmController.findFilm(3);
-
-        List<Film> filmsByYear = new ArrayList<>();
-        filmsByYear.add(film3);
-        filmsByYear.add(film2);
-        filmsByYear.add(film1);
-
         this.mockMvc.perform(get("/films/director/1?sortBy=year"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(filmsByYear)));
-
-        List<Film> filmsByLikes = new ArrayList<>();
-        filmsByLikes.add(film1);
-        filmsByLikes.add(film2);
-        filmsByLikes.add(film3);
+                .andExpect(content().json(FILMS_BY_YEAR));
 
         this.mockMvc.perform(get("/films/director/1?sortBy=likes"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(filmsByLikes)));
+                .andExpect(content().json(FILMS_BY_LIKES));
     }
 }

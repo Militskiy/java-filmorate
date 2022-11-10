@@ -143,12 +143,12 @@ public class ReviewDaoImpl implements ReviewDao {
 
     private Review makeReview(ResultSet rs, int rowNum) throws SQLException {
         return Review.builder()
-                .withReviewId(rs.getInt("review_id"))
-                .withContent(rs.getString("content"))
-                .withIsPositive(rs.getBoolean("is_positive"))
-                .withUserId(rs.getInt("user_id"))
-                .withFilmId(rs.getInt("film_id"))
-                .withUseful(rs.getInt("useful"))
+                .reviewId(rs.getInt("review_id"))
+                .content(rs.getString("content"))
+                .isPositive(rs.getBoolean("is_positive"))
+                .userId(rs.getInt("user_id"))
+                .filmId(rs.getInt("film_id"))
+                .useful(rs.getInt("useful"))
                 .build();
     }
 }

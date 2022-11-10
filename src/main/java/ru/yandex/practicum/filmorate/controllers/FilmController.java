@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.services.FilmService;
@@ -23,6 +27,7 @@ import javax.validation.constraints.Min;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/films")
@@ -34,9 +39,14 @@ public class FilmController {
 
     @GetMapping
     @Operation(summary = "Get all films")
-    public Collection<Film> findAllFilms() {
+    public ResponseEntity<Collection<FilmDto>> findAllFilms() {
         log.debug("Getting all films");
-        return filmService.findAllFilms();
+        return ResponseEntity.ok(
+                filmService.findAllFilms()
+                        .stream()
+                        .map(FilmMapper.INSTANCE::filmToFilmDto)
+                        .collect(Collectors.toList())
+        );
     }
 
     @GetMapping("/{id}")
@@ -56,9 +66,15 @@ public class FilmController {
 
     @PostMapping
     @Operation(summary = "Add a new film to service")
-    public Film createFilm(@Validated(ValidationSequence.class) @RequestBody Film film) {
-        log.debug("Creating new film {}", film);
-        return filmService.createFilm(film);
+    public ResponseEntity<FilmDto> createFilm(@Validated(ValidationSequence.class) @RequestBody FilmDto filmDto) {
+        log.debug("Creating new film {}", filmDto);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        FilmMapper.INSTANCE.filmToFilmDto(
+                                filmService.createFilm(FilmMapper.INSTANCE.filmDtoToFilm(filmDto))
+                        )
+                );
     }
 
     @PutMapping

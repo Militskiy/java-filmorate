@@ -34,12 +34,12 @@ public class EventDaoImpl implements EventDao {
 
     private Event makeEvent(ResultSet rs, int rowNum) throws SQLException {
         return Event.builder()
-                .withEventId(rs.getInt("event_id"))
-                .withTimestamp(rs.getTimestamp("timestamp"))
-                .withUserId(rs.getInt("user_id"))
-                .withEventType(EventType.valueOf(rs.getString("event_type")))
-                .withOperation(Operation.valueOf(rs.getString("operation")))
-                .withEntityId(rs.getInt("entity_id"))
+                .eventId(rs.getInt("event_id"))
+                .timestamp(rs.getTimestamp("timestamp"))
+                .userId(rs.getInt("user_id"))
+                .eventType(EventType.valueOf(rs.getString("event_type")))
+                .operation(Operation.valueOf(rs.getString("operation")))
+                .entityId(rs.getInt("entity_id"))
                 .build();
     }
 }

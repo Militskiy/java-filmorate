@@ -122,4 +122,59 @@ public interface TestJsons {
                    "\"name\":\"Триллер\"},{\"id\":5,\"name\":\"Документальный\"},{\"id\":6,\"name\":\"Боевик\"}]," +
                    "\"userLikes\":[{\"id\":3,\"email\":\"email3@test.com\",\"login\":\"login3\",\"name\":\"name3\"," +
                    "\"birthday\":\"2022-10-01\",\"friends\":[]}],\"directors\":[{\"id\":1,\"name\":\"Director 1\"}]}]";
+   String FIND_ALL_REVIEWS =
+           "[" +
+                   "{" +
+                   "\"reviewId\":2," +
+                   "\"content\":\"Very bad review\"," +
+                   "\"userId\":2," +
+                   "\"filmId\":1," +
+                   "\"useful\":99," +
+                   "\"isPositive\":false" +
+                   "}," +
+                   "{" +
+                   "\"reviewId\":1," +
+                   "\"content\":\"Very good review\"," +
+                   "\"userId\":1," +
+                   "\"filmId\":1," +
+                   "\"useful\":0," +
+                   "\"isPositive\":true" +
+                   "}," +
+                   "{" +
+                   "\"reviewId\":3," +
+                   "\"content\":\"Very good review\"," +
+                   "\"userId\":3," +
+                   "\"filmId\":1," +
+                   "\"useful\":0," +
+                   "\"isPositive\":true" +
+                   "}" +
+                   "]";
+
+   String FIND_ALL_REVIEWS_AFTER_ADD_LIKE =
+           "[" +
+                   "{" +
+                   "\"reviewId\":2," +
+                   "\"content\":\"Very bad review\"," +
+                   "\"userId\":2," +
+                   "\"filmId\":1," +
+                   "\"useful\":99," +
+                   "\"isPositive\":false" +
+                   "}," +
+                   "{" +
+                   "\"reviewId\":3," +
+                   "\"content\":\"Very good review\"," +
+                   "\"userId\":3," +
+                   "\"filmId\":1," +
+                   "\"useful\":1," +
+                   "\"isPositive\":true" +
+                   "}," +
+                   "{" +
+                   "\"reviewId\":1," +
+                   "\"content\":\"Very good review\"," +
+                   "\"userId\":1," +
+                   "\"filmId\":1," +
+                   "\"useful\":0," +
+                   "\"isPositive\":true" +
+                   "}" +
+                   "]";
 }

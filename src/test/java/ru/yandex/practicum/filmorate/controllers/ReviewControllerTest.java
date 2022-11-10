@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
 @ActiveProfiles("test")
-class ReviewControllerTest {
+class ReviewControllerTest implements TestJsons{
 
     @Autowired
     private MockMvc mockMvc;
@@ -36,32 +36,7 @@ class ReviewControllerTest {
     void shouldFindAll() throws Exception {
         this.mockMvc.perform(get("/reviews"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[" +
-                        "{" +
-                        "\"reviewId\":2," +
-                        "\"content\":\"Very bad review\"," +
-                        "\"userId\":2," +
-                        "\"filmId\":1," +
-                        "\"useful\":99," +
-                        "\"isPositive\":false" +
-                        "}," +
-                        "{" +
-                        "\"reviewId\":1," +
-                        "\"content\":\"Very good review\"," +
-                        "\"userId\":1," +
-                        "\"filmId\":1," +
-                        "\"useful\":0," +
-                        "\"isPositive\":true" +
-                        "}," +
-                        "{" +
-                        "\"reviewId\":3," +
-                        "\"content\":\"Very good review\"," +
-                        "\"userId\":3," +
-                        "\"filmId\":1," +
-                        "\"useful\":0," +
-                        "\"isPositive\":true" +
-                        "}" +
-                        "]"));
+                .andExpect(content().json(FIND_ALL_REVIEWS));
     }
 
     @Test
@@ -172,32 +147,7 @@ class ReviewControllerTest {
                 .andExpect(status().isOk());
         this.mockMvc.perform(get("/reviews"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[" +
-                        "{" +
-                        "\"reviewId\":2," +
-                        "\"content\":\"Very bad review\"," +
-                        "\"userId\":2," +
-                        "\"filmId\":1," +
-                        "\"useful\":99," +
-                        "\"isPositive\":false" +
-                        "}," +
-                        "{" +
-                        "\"reviewId\":3," +
-                        "\"content\":\"Very good review\"," +
-                        "\"userId\":3," +
-                        "\"filmId\":1," +
-                        "\"useful\":1," +
-                        "\"isPositive\":true" +
-                        "}," +
-                        "{" +
-                        "\"reviewId\":1," +
-                        "\"content\":\"Very good review\"," +
-                        "\"userId\":1," +
-                        "\"filmId\":1," +
-                        "\"useful\":0," +
-                        "\"isPositive\":true" +
-                        "}" +
-                        "]"));
+                .andExpect(content().json(FIND_ALL_REVIEWS_AFTER_ADD_LIKE));
     }
 
     @Test

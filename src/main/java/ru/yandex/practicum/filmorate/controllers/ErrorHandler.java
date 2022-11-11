@@ -15,6 +15,8 @@ import ru.yandex.practicum.filmorate.exceptions.NoSuchReviewException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.ErrorResponse;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -88,7 +90,10 @@ public class ErrorHandler {
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> handleThrowable(final Throwable e) {
-        log.debug(e.getMessage());
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        e.printStackTrace(printWriter);
+        log.debug(stringWriter.toString());
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse("Unexpected error: " + e.getMessage()));

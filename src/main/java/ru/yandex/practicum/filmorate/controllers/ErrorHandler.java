@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,10 +14,8 @@ import ru.yandex.practicum.filmorate.exceptions.NoSuchGenreException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchMpaException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchReviewException;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
-import ru.yandex.practicum.filmorate.model.ErrorResponse;
+import ru.yandex.practicum.filmorate.dto.ErrorResponse;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -90,10 +89,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> handleThrowable(final Throwable e) {
-        StringWriter stringWriter = new StringWriter();
-        PrintWriter printWriter = new PrintWriter(stringWriter);
-        e.printStackTrace(printWriter);
-        log.debug(stringWriter.toString());
+        log.debug(ExceptionUtils.getStackTrace(e));
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse("Unexpected error: " + e.getMessage()));

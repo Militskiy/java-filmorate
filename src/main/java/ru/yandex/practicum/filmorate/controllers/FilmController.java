@@ -23,6 +23,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.services.FilmService;
 import ru.yandex.practicum.filmorate.validators.ValidationSequence;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.util.Collection;
 import java.util.List;
@@ -51,9 +52,9 @@ public class FilmController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get film by its id")
-    public Film findFilm(@PathVariable @Min(1) Integer id) {
+    public ResponseEntity<FilmDto> findFilm(@PathVariable @Min(1) Integer id) {
         log.debug("Getting film with id: {}", id);
-        return filmService.findFilmById(id);
+        return ResponseEntity.ok(FilmMapper.INSTANCE.filmToFilmDto(filmService.findFilmById(id)));
     }
 
     @DeleteMapping("/{filmId}")
@@ -88,10 +89,11 @@ public class FilmController {
     @Operation(summary = "Add a user like to a film")
     public void addLike(
             @PathVariable @Min(1) Integer id,
-            @PathVariable @Min(1) Integer userId
+            @PathVariable @Min(1) Integer userId,
+            @RequestParam(defaultValue = "4", required = false) @Min(1) @Max(10) Integer rate
     ) {
         log.debug("Adding user with id: {} like to film with id: {}", userId, id);
-        filmService.addLike(id, userId);
+        filmService.addLike(id, userId, rate);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
@@ -121,7 +123,6 @@ public class FilmController {
             @RequestParam(value = "genreId") Optional<Integer> genreId,
             @RequestParam(value = "year") Optional<Integer> year
     ) {
-
         if (genreId.isPresent() || year.isPresent()) {
             log.debug("Getting the most popular films with filter");
             return filmService.getTheMostPopularFilmsWithFilter(limit, genreId, year);

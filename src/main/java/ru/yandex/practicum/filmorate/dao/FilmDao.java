@@ -35,7 +35,8 @@ public interface FilmDao extends Dao<Film> {
                     "       RELEASE_DATE,\n" +
                     "       DURATION,\n" +
                     "       R.RATING_ID AS RATING_ID,\n" +
-                    "       RATING_NAME\n" +
+                    "       RATING_NAME,\n" +
+                    "       FILM_RATE\n" +
                     "FROM FILMS\n" +
                     "         LEFT OUTER JOIN RATINGS R on R.RATING_ID = FILMS.RATING_ID\n" +
                     "WHERE FILM_ID = ?";
@@ -46,13 +47,21 @@ public interface FilmDao extends Dao<Film> {
                     "       RELEASE_DATE,\n" +
                     "       DURATION,\n" +
                     "       R.RATING_ID AS RATING_ID,\n" +
-                    "       RATING_NAME\n" +
+                    "       RATING_NAME,\n" +
+                    "       FILM_RATE\n" +
                     "FROM FILMS\n" +
                     "         LEFT OUTER JOIN RATINGS R on R.RATING_ID = FILMS.RATING_ID\n";
 
     String ADD_LIKE =
-            "INSERT INTO LIKES (USER_ID, FILM_ID)\n" +
-                    "VALUES (?, ?)";
+            "INSERT INTO LIKES (USER_ID, FILM_ID, LIKE_RATE)\n" +
+                    "VALUES (?, ?, ?)";
+
+    String UPDATE_FILM_RATE =
+            "UPDATE FILMS\n" +
+                    "SET FILM_RATE = (SELECT COALESCE(ROUND(AVG(LIKE_RATE), 1), 4) as AVERAGE_RATE\n" +
+                    "                 FROM LIKES\n" +
+                    "                 WHERE FILM_ID = ?)\n" +
+                    "WHERE FILM_ID = ?;";
 
     String DELETE_LIKE = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
 
@@ -80,37 +89,35 @@ public interface FilmDao extends Dao<Film> {
                     "       RELEASE_DATE,\n" +
                     "       DURATION,\n" +
                     "       F.RATING_ID,\n" +
-                    "       RATING_NAME\n" +
+                    "       RATING_NAME,\n" +
+                    "       FILM_RATE\n" +
                     "FROM FILMS F\n" +
                     "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
                     "LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
                     "GROUP BY F.FILM_ID\n" +
-                    "ORDER BY COUNT(L.FILM_ID) DESC\n" +
+                    "ORDER BY FILM_RATE DESC, COUNT(L.FILM_ID) DESC\n" +
                     "LIMIT ?;";
 
-
-    //запрос по факту некорректный, нет проверки на дружбу, но это косяк postman
     String FIND_COMMON_FILMS_COUPLE_FRIENDS =
-            "select f.*, r.RATING_NAME\n" +
-                    "from (select l.FILM_ID\n" +
-                    "      from\n" +
-                    "               LIKES L\n" +
-                    "               inner join LIKES L2 on l.FILM_ID = L2.FILM_ID\n" +
-                    "      where l.USER_ID = ?\n" +
-                    "        AND l2.USER_ID = ?\n" +
-                    "        AND L.FILM_ID = L2.FILM_ID) as FL\n" +
-                    "         inner join FILMS as f on f.FILM_ID = FL.FILM_ID\n" +
-                    "         left join (select l.FILM_ID, count(distinct l.USER_ID) as ql FROM LIKES as l group by l.FILM_ID)\n" +
-                    "    as L3 on f.FILM_ID = L3.FILM_ID\n" +
-                    "         left join RATINGS R on R.RATING_ID = f.RATING_ID\n" +
-                    "order by ql desc\n" +
-                    ";";
+                    "SELECT F.*,\n" +
+                    "R.RATING_NAME\n" +
+                    "FROM FILMS F\n" +
+                    "         JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "         LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
+                    "WHERE F.FILM_ID IN (SELECT FILM_ID\n" +
+                    "                    FROM LIKES\n" +
+                    "                    WHERE USER_ID = ?\n" +
+                    "                       OR USER_ID = ?\n" +
+                    "                    GROUP BY FILM_ID\n" +
+                    "                    HAVING COUNT(FILM_ID) > 1)\n" +
+                    "GROUP BY F.FILM_ID\n" +
+                    "ORDER BY F.FILM_RATE DESC, COUNT(L.FILM_ID) DESC;";
 
 
     String DELETE_FILM = "DELETE FROM FILMS WHERE FILM_ID = ?";
 
     String RECOMMENDED_FILMS =
-            "SELECT F.FILM_ID, FILM_NAME, FILM_DESCRIPTION, RELEASE_DATE, DURATION, F.RATING_ID, RATING_NAME\n" +
+            "SELECT F.FILM_ID, FILM_NAME, FILM_DESCRIPTION, RELEASE_DATE, DURATION, F.RATING_ID, RATING_NAME, FILM_RATE\n" +
                     "FROM LIKES AS L\n" +
                     "         JOIN FILMS AS F ON F.FILM_ID = L.FILM_ID\n" +
                     "         JOIN RATINGS AS R ON R.RATING_ID = F.RATING_ID\n" +
@@ -120,7 +127,7 @@ public interface FilmDao extends Dao<Film> {
                     "                    WHERE FILM_ID IN (SELECT FILM_ID FROM LIKES WHERE USER_ID = ?)\n" +
                     "                      AND USER_ID != ?\n" +
                     "                    GROUP BY USER_ID\n" +
-                    "                    ORDER BY COUNT(FILM_ID) DESC\n" +
+                    "                    ORDER BY FILM_RATE DESC, COUNT(FILM_ID) DESC\n" +
                     "                    LIMIT 1);";
 
     String GET_DIRECTOR_FILMS_YEAR_SORTED =
@@ -130,13 +137,14 @@ public interface FilmDao extends Dao<Film> {
                     "       RELEASE_DATE,\n" +
                     "       DURATION,\n" +
                     "       F.RATING_ID,\n" +
-                    "       RATING_NAME\n" +
+                    "       RATING_NAME,\n" +
+                    "       F.FILM_RATE\n" +
                     "FROM DIRECTORS_FILMS DF\n" +
                     "LEFT JOIN FILMS F on F.FILM_ID = DF.FILM_ID\n" +
                     "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
                     "LEFT JOIN DIRECTORS D on D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
                     "WHERE DF.DIRECTOR_ID = ?\n" +
-                    "ORDER BY F.RELEASE_DATE ASC\n";
+                    "ORDER BY F.RELEASE_DATE ASC, F.FILM_RATE DESC\n";
 
     String GET_DIRECTOR_FILMS_LIKES_SORTED =
             "SELECT F.FILM_ID,\n" +
@@ -145,7 +153,8 @@ public interface FilmDao extends Dao<Film> {
                     "       RELEASE_DATE,\n" +
                     "       DURATION,\n" +
                     "       F.RATING_ID,\n" +
-                    "       RATING_NAME\n" +
+                    "       RATING_NAME,\n" +
+                    "       F.FILM_RATE\n" +
                     "FROM DIRECTORS_FILMS DF\n" +
                     "LEFT JOIN FILMS F on F.FILM_ID = DF.FILM_ID\n" +
                     "LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
@@ -153,9 +162,9 @@ public interface FilmDao extends Dao<Film> {
                     "LEFT JOIN DIRECTORS D on D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
                     "WHERE DF.DIRECTOR_ID = ?\n" +
                     "GROUP BY F.FILM_ID\n" +
-                    "ORDER BY COUNT(L.FILM_ID) DESC\n";
+                    "ORDER BY FILM_RATE DESC, COUNT(L.FILM_ID) DESC\n";
 
-    String GET_THE_MOST_POPULAR_FILMS_WITH_FILTRES =
+    String GET_THE_MOST_POPULAR_FILMS_WITH_FILTERS =
             "SELECT DISTINCT F.*, LF.QL, RATING_NAME\n" +
                     "FROM FILMS AS F\n" +
                     "         LEFT JOIN (SELECT L.FILM_ID, COUNT(DISTINCT L.USER_ID) AS QL FROM LIKES AS L GROUP BY L.FILM_ID)\n" +
@@ -164,7 +173,7 @@ public interface FilmDao extends Dao<Film> {
                     "INNER JOIN RATINGS R on R.RATING_ID = f.RATING_ID\n" +
                     "WHERE ((YEAR(F.RELEASE_DATE) = ?) or ?=false)\n" +
                     "  AND ((GF.GENRE_ID = ?) or ? = false)\n" +
-                    "ORDER BY QL DESC\n" +
+                    "ORDER BY F.FILM_RATE DESC, QL DESC\n" +
                     "LIMIT ?;";
 
 
@@ -193,11 +202,12 @@ public interface FilmDao extends Dao<Film> {
                     "SEARCH.RELEASE_DATE,\n" +
                     "SEARCH.DURATION,\n" +
                     "SEARCH.RATING_ID,\n" +
-                    "SEARCH.RATING_NAME\n" +
+                    "SEARCH.RATING_NAME,\n" +
+                    "SEARCH.FILM_RATE\n" +
                     "FROM " + "(" + "string" + ") AS SEARCH\n" +
                     "LEFT JOIN LIKES AS L ON L.FILM_ID = SEARCH.FILM_ID\n" +
                     "GROUP BY SEARCH.FILM_ID\n" +
-                    "ORDER BY COUNT(L.FILM_ID) DESC";
+                    "ORDER BY SEARCH.FILM_RATE DESC, COUNT(L.FILM_ID) DESC";
 
     String SORTED_FILMS =
             "SELECT F.FILM_ID,\n" +
@@ -206,12 +216,13 @@ public interface FilmDao extends Dao<Film> {
                     "       RELEASE_DATE,\n" +
                     "       DURATION,\n" +
                     "       F.RATING_ID,\n" +
-                    "       RATING_NAME\n" +
+                    "       RATING_NAME,\n" +
+                    "       FILM_RATE\n" +
                     "FROM FILMS F\n" +
                     "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
                     "LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
                     "GROUP BY F.FILM_ID\n" +
-                    "ORDER BY COUNT(L.FILM_ID) DESC\n";
+                    "ORDER BY FILM_RATE DESC, COUNT(L.FILM_ID) DESC\n";
 
     String UNION = "\nUNION\n";
     String DIRECTOR = "director";
@@ -223,7 +234,7 @@ public interface FilmDao extends Dao<Film> {
 
     void removeFilm(Integer filmId);
 
-    void addLike(Integer filmId, Integer userId);
+    void addLike(Integer filmId, Integer userId, Integer rate);
 
     void removeLike(Integer filmId, Integer userId);
 

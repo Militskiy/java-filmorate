@@ -20,6 +20,7 @@ public class Film {
     private LocalDate releaseDate;
     private long duration;
     private Mpa mpa;
+    private int rate;
     private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
     private final Set<User> userLikes = new HashSet<>();
     private final Set<Director> directors = new HashSet<>();

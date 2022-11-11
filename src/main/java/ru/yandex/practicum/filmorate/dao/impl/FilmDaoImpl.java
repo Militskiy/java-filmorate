@@ -139,12 +139,13 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
-    public void addLike(Integer filmId, Integer userId) {
+    public void addLike(Integer filmId, Integer userId, Integer rate) {
         userStorage.findById(userId);
         if (findById(filmId).getUserLikes()
                 .stream()
                 .noneMatch(user -> user.getId() == userId)) {
-            jdbcTemplate.getJdbcTemplate().update(ADD_LIKE, userId, filmId);
+            jdbcTemplate.getJdbcTemplate().update(ADD_LIKE, userId, filmId, rate);
+            jdbcTemplate.getJdbcTemplate().update(UPDATE_FILM_RATE, filmId, filmId);
             eventStorage.createEvent(userId, EventType.LIKE, Operation.ADD, filmId);
         } else {
             throw new BadArgumentsException("Film already liked");
@@ -158,6 +159,7 @@ public class FilmDaoImpl implements FilmDao {
                 .stream()
                 .anyMatch(user -> user.getId() == userId)) {
             jdbcTemplate.getJdbcTemplate().update(DELETE_LIKE, filmId, userId);
+            jdbcTemplate.getJdbcTemplate().update(UPDATE_FILM_RATE, filmId, filmId);
             eventStorage.createEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
         } else {
             throw new BadArgumentsException("Film not liked");
@@ -197,7 +199,7 @@ public class FilmDaoImpl implements FilmDao {
             int count, Optional<Integer> genreId, Optional<Integer> year
     ) {
         return addFilmFields(jdbcTemplate.getJdbcTemplate()
-                .query(GET_THE_MOST_POPULAR_FILMS_WITH_FILTRES, (rs, rowNum) -> makeFilm(rs),
+                .query(GET_THE_MOST_POPULAR_FILMS_WITH_FILTERS, (rs, rowNum) -> makeFilm(rs),
                         year.orElse(0), year.isPresent(), genreId.orElse(0), genreId.isPresent(), count));
     }
 
@@ -239,7 +241,8 @@ public class FilmDaoImpl implements FilmDao {
         int duration = rs.getInt("duration");
         int ratingId = rs.getInt("rating_id");
         String ratingName = rs.getString("rating_name");
-        return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName));
+        int rate = rs.getInt("film_rate");
+        return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName), rate);
     }
 
     private void filmGenreUpdate(Film film) {

@@ -38,8 +38,8 @@ public class FilmService {
         filmStorage.removeFilm(filmId);
     }
 
-    public void addLike(Integer filmId, Integer userId) {
-        filmStorage.addLike(filmId, userId);
+    public void addLike(Integer filmId, Integer userId, Integer rate) {
+        filmStorage.addLike(filmId, userId, rate);
     }
 
     public void removeLike(Integer filmId, Integer userId) {

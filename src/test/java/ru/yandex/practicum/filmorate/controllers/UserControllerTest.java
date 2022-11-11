@@ -11,11 +11,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exceptions.NoSuchUserException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,40 +42,33 @@ public class UserControllerTest implements TestJsons {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserController userController;
-
     @Test
-    @Sql(scripts = {"file:assets/scripts/restart.sql"})
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void shouldFindAllUsers() throws Exception {
-        User user1 = new User("test@test.com", "test", "", BIRTHDAY);
-        User user2 = new User("test@test.com", "test", null, BIRTHDAY);
-        User user3 = new User("test@test.com", "test", " ", BIRTHDAY);
-        User user4 = new User("test@test.com", "test", "name", BIRTHDAY);
-        user1 = userController.createUser(user1);
-        user2 = userController.createUser(user2);
-        user3 = userController.createUser(user3);
-        user4 = userController.createUser(user4);
-        String body = objectMapper.writeValueAsString(List.of(user1, user2, user3, user4));
         this.mockMvc.perform(
                         get("/users"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(body));
+                .andExpect(content().json(USERS));
     }
 
     @Test
     @Sql(scripts = {"file:assets/scripts/restart.sql"})
     void givenNewUserWithNullName_whenCreated_thenAddsUserWithNameEqualsLogin() throws Exception {
         //given
+
         String body = objectMapper.writeValueAsString(
-                new User("test@test.com", "login", null, BIRTHDAY));
+                UserDto.builder()
+                        .email("test@test.com")
+                        .login("login")
+                        .birthday(BIRTHDAY)
+                        .build());
 
         //when
         this.mockMvc.perform(
                         post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
 
                 //then
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.email").value("test@test.com"))
                 .andExpect(jsonPath("$.login").value("login"))
@@ -85,7 +78,11 @@ public class UserControllerTest implements TestJsons {
 
     @Test
     void tryToCreateUserWithNullEmailBadRequest() throws Exception {
-        User user = new User(null, "login", "name", BIRTHDAY);
+        User user = User.builder()
+                .login("login")
+                .name("name")
+                .birthday(BIRTHDAY)
+                .build();
         String body = objectMapper.writeValueAsString(user);
         this.mockMvc.perform(
                         post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -95,7 +92,12 @@ public class UserControllerTest implements TestJsons {
 
     @Test
     void tryToCreateUserWithInvalidEmailBadRequest() throws Exception {
-        User user = new User("это-неправильный?эмейл@", "login", "name", BIRTHDAY);
+        User user = User.builder()
+                .email("bad email")
+                .login("login")
+                .name("name")
+                .birthday(BIRTHDAY)
+                .build();
         String body = objectMapper.writeValueAsString(user);
         this.mockMvc.perform(
                         post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -106,7 +108,11 @@ public class UserControllerTest implements TestJsons {
 
     @Test
     void tryToCreateUserWithNullLoginBadRequest() throws Exception {
-        User user = new User("email@email.com", null, "name", BIRTHDAY);
+        User user = User.builder()
+                .email("email@email.com")
+                .name("name")
+                .birthday(BIRTHDAY)
+                .build();
         String body = objectMapper.writeValueAsString(user);
         this.mockMvc.perform(
                         post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -118,7 +124,13 @@ public class UserControllerTest implements TestJsons {
     @Test
     void givenUserWithSpaceInLogin_whenPosting_thenThrowsValidationException() throws Exception {
         //given
-        User user = new User("aa@bb.com", "log in", "name", BIRTHDAY);
+        User user = User.builder()
+                .email("aa@bb.com")
+                .login("log in")
+                .name("name")
+                .birthday(BIRTHDAY)
+                .build();
+
         String requestBody = objectMapper.writeValueAsString(user);
 
         //when
@@ -133,7 +145,12 @@ public class UserControllerTest implements TestJsons {
 
     @Test
     void tryToCreateUserWithEmptyLoginBadRequest() throws Exception {
-        User user = new User("email@email.com", "", "name", BIRTHDAY);
+        User user = User.builder()
+                .email("email@email.com")
+                .login("")
+                .name("name")
+                .birthday(BIRTHDAY)
+                .build();
         String body = objectMapper.writeValueAsString(user);
         this.mockMvc.perform(
                         post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -144,7 +161,12 @@ public class UserControllerTest implements TestJsons {
 
     @Test
     void tryToCreateUserWithBlankLoginBadRequest() throws Exception {
-        User user = new User("email@email.com", " ", "name", BIRTHDAY);
+        User user = User.builder()
+                .email("email@email.com")
+                .login(" ")
+                .name("name")
+                .birthday(BIRTHDAY)
+                .build();
         String body = objectMapper.writeValueAsString(user);
         this.mockMvc.perform(
                         post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -155,7 +177,11 @@ public class UserControllerTest implements TestJsons {
 
     @Test
     void tryToCreateUserWithNullBirthdayBadRequest() throws Exception {
-        User user = new User("email@email.com", "login", "name", null);
+        User user = User.builder()
+                .email("email@email.com")
+                .login("login")
+                .name("name")
+                .build();
         String body = objectMapper.writeValueAsString(user);
         this.mockMvc.perform(
                         post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -166,7 +192,12 @@ public class UserControllerTest implements TestJsons {
 
     @Test
     void tryToCreateUserWithFutureBirthdayBadRequest() throws Exception {
-        User user = new User("email@email.com", "login", "name", BIRTHDAY.plusDays(2));
+        User user = User.builder()
+                .email("email@email.com")
+                .login("login")
+                .name("name")
+                .birthday(BIRTHDAY.plusDays(2))
+                .build();
         String body = objectMapper.writeValueAsString(user);
         this.mockMvc.perform(
                         post("/users").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -177,7 +208,13 @@ public class UserControllerTest implements TestJsons {
 
     @Test
     void tryToUpdateUserWithWrongIdNotFound() throws Exception {
-        User user = new User(10, "email@email.com", "login", "name", BIRTHDAY);
+        User user = User.builder()
+                .id(10)
+                .email("email@email.com")
+                .login("login")
+                .name("name")
+                .birthday(BIRTHDAY)
+                .build();
         String body = objectMapper.writeValueAsString(user);
         this.mockMvc.perform(
                         put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -191,9 +228,22 @@ public class UserControllerTest implements TestJsons {
     @Test
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void createsAndUpdatesUser() throws Exception {
-        User user = new User("email@email.com", "login", "name", BIRTHDAY);
-        user = userController.createUser(user);
-        User updatedUser = new User(user.getId(), "updated@updated.com", "login", "name", BIRTHDAY);
+        UserDto user = UserDto.builder()
+                .email("email@email.com")
+                .login("login")
+                .name("name")
+                .birthday(BIRTHDAY)
+                .build();
+        String userBody = objectMapper.writeValueAsString(user);
+        this.mockMvc.perform(post("/users").content(userBody).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+        UserDto updatedUser = UserDto.builder()
+                .id(4)
+                .email("updated@email.com")
+                .login("login")
+                .name("name")
+                .birthday(BIRTHDAY)
+                .build();
         String body = objectMapper.writeValueAsString(updatedUser);
         this.mockMvc.perform(
                         put("/users").content(body).contentType(MediaType.APPLICATION_JSON))
@@ -237,12 +287,12 @@ public class UserControllerTest implements TestJsons {
                                 "\"name\":\"name3\"," +
                                 "\"birthday\":\"2022-10-01\"," +
                                 "\"friends\":[{" +
-                                    "\"id\":1," +
-                                    "\"email\":\"email1@test.com\"," +
-                                    "\"login\":\"login1\"," +
-                                    "\"name\":\"name1\"," +
-                                    "\"birthday\":\"2022-10-01\"," +
-                                    "\"friends\":[]}]}]")
+                                "\"id\":1," +
+                                "\"email\":\"email1@test.com\"," +
+                                "\"login\":\"login1\"," +
+                                "\"name\":\"name1\"," +
+                                "\"birthday\":\"2022-10-01\"," +
+                                "\"friends\":[]}]}]")
                 );
     }
 
@@ -266,6 +316,24 @@ public class UserControllerTest implements TestJsons {
     @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
     void tryToAddSelfAsFriend() throws Exception {
         this.mockMvc.perform(put("/users/1/friends/1"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    void shouldGetAddFriendEvent() throws Exception {
+        this.mockMvc.perform(put("/users/2/friends/3"))
+                .andExpect(status().isOk());
+        this.mockMvc.perform(get("/users/2/feed"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[" +
+                        "{" +
+                        "\"eventId\":1," +
+                        "\"userId\":2," +
+                        "\"eventType\":\"FRIEND\"," +
+                        "\"operation\":\"ADD\"," +
+                        "\"entityId\":3" +
+                        "}" +
+                        "]"));
     }
 }

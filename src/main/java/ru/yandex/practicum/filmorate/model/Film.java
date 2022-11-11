@@ -1,17 +1,9 @@
 package ru.yandex.practicum.filmorate.model;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.filmorate.annotations.FilmDateConstraint;
-import ru.yandex.practicum.filmorate.validators.NullCheckGroup;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PastOrPresent;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -23,27 +15,14 @@ import java.util.TreeSet;
 @NoArgsConstructor
 public class Film {
     private int id;
-    @NotBlank(message = "Name must not be blank", groups = NullCheckGroup.class)
-    @Schema(example = "Test film")
     private String name;
-    @Size(max = 200, message = "Description size must be under 200 symbols")
-    @Schema(example = "A film to test application")
     private String description;
-    @NotNull(message = "Release date must not be null", groups = NullCheckGroup.class)
-    @PastOrPresent(message = "Release date cannot be in the future")
-    @FilmDateConstraint
-    @Schema(example = "2000-10-22")
     private LocalDate releaseDate;
-    @Positive(message = "Duration must be positive")
-    @Schema(type = "integer", example = "120")
     private long duration;
-    @NotNull
-    @Schema(example = "{\"id\": 1}")
     private Mpa mpa;
-    @Schema(example = "[{\"id\": 1}]")
     private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
-    @Schema(example = "[]")
     private final Set<User> userLikes = new HashSet<>();
+    private final Set<Director> directors = new HashSet<>();
 
     public Film(String name, String description, LocalDate releaseDate, long duration, Mpa mpa) {
         this.name = name;
@@ -53,14 +32,15 @@ public class Film {
         this.mpa = mpa;
     }
 
-    public boolean addLike(User user) {
-        return userLikes.add(user);
+    public void addLike(User user) {
+        userLikes.add(user);
     }
 
-    public boolean addGenre(Genre genre) {
-        return genres.add(genre);
+    public void addGenre(Genre genre) {
+        genres.add(genre);
     }
-    public boolean removeGenre(Genre genre) {
-        return genres.remove(genre);
+
+    public void addDirector(Director director) {
+        directors.add(director);
     }
 }

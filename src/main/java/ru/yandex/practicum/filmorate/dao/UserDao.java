@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.dao;
 
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
@@ -54,15 +55,21 @@ public interface UserDao extends Dao<User> {
                     "             OR USER_ID = ? AND FRIEND_ID = ?) = 2 THEN TRUE ELSE CONFIRMED END\n" +
                     "WHERE USER_ID = ? AND FRIEND_ID = ? OR USER_ID = ? AND FRIEND_ID = ?";
 
-    boolean delete(Integer userId, Integer friendId);
+    String DELETE_USER = "DELETE FROM USERS WHERE USER_ID = ?";
+
+    void removeFriend(Integer userId, Integer friendId);
 
     Collection<User> findFriends(Integer userId);
 
     Collection<User> findCommonFriends(Integer userId, Integer otherId);
 
-    boolean createFriend(Integer userId, Integer friendId);
+    void removeUser(Integer userId);
+
+    void addFriend(Integer userId, Integer friendId);
 
     User create(User user);
 
     User update(User user);
+
+    Collection<Event> findFeed(Integer id);
 }

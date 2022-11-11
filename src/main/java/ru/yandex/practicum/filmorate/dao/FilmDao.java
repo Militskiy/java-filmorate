@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.dao;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 public interface FilmDao extends Dao<Film> {
 
@@ -11,7 +13,11 @@ public interface FilmDao extends Dao<Film> {
 
     String FILM_GENRE_UPDATE = "INSERT INTO GENRES_FILMS (FILM_ID, GENRE_ID) VALUES (?, ?)";
 
+    String FILM_DIRECTOR_UPDATE = "INSERT INTO DIRECTORS_FILMS (FILM_ID, DIRECTOR_ID) VALUES (?, ?)";
+
     String DELETE_GENRES_QUERY = "DELETE FROM GENRES_FILMS WHERE FILM_ID = :filmId;\n";
+
+    String DELETE_DIRECTORS_QUERY = "DELETE FROM DIRECTORS_FILMS WHERE FILM_ID = :filmId;\n";
 
     String UPDATE_FILM_QUERY =
             "UPDATE FILMS\n" +
@@ -59,6 +65,14 @@ public interface FilmDao extends Dao<Film> {
                     "FROM GENRES_FILMS " +
                     "WHERE FILM_ID = ?)";
 
+    String GET_FILM_DIRECTORS =
+            "SELECT * " +
+                    "FROM DIRECTORS " +
+                    "WHERE DIRECTOR_ID IN " +
+                    "(SELECT DIRECTOR_ID " +
+                    "FROM DIRECTORS_FILMS " +
+                    "WHERE FILM_ID = ?)";
+
     String FIND_POPULAR_FILMS =
             "SELECT F.FILM_ID,\n" +
                     "       FILM_NAME,\n" +
@@ -74,13 +88,155 @@ public interface FilmDao extends Dao<Film> {
                     "ORDER BY COUNT(L.FILM_ID) DESC\n" +
                     "LIMIT ?;";
 
+
+    //запрос по факту некорректный, нет проверки на дружбу, но это косяк postman
+    String FIND_COMMON_FILMS_COUPLE_FRIENDS =
+            "select f.*, r.RATING_NAME\n" +
+                    "from (select l.FILM_ID\n" +
+                    "      from\n" +
+                    "               LIKES L\n" +
+                    "               inner join LIKES L2 on l.FILM_ID = L2.FILM_ID\n" +
+                    "      where l.USER_ID = ?\n" +
+                    "        AND l2.USER_ID = ?\n" +
+                    "        AND L.FILM_ID = L2.FILM_ID) as FL\n" +
+                    "         inner join FILMS as f on f.FILM_ID = FL.FILM_ID\n" +
+                    "         left join (select l.FILM_ID, count(distinct l.USER_ID) as ql FROM LIKES as l group by l.FILM_ID)\n" +
+                    "    as L3 on f.FILM_ID = L3.FILM_ID\n" +
+                    "         left join RATINGS R on R.RATING_ID = f.RATING_ID\n" +
+                    "order by ql desc\n" +
+                    ";";
+
+
+    String DELETE_FILM = "DELETE FROM FILMS WHERE FILM_ID = ?";
+
+    String RECOMMENDED_FILMS =
+            "SELECT F.FILM_ID, FILM_NAME, FILM_DESCRIPTION, RELEASE_DATE, DURATION, F.RATING_ID, RATING_NAME\n" +
+                    "FROM LIKES AS L\n" +
+                    "         JOIN FILMS AS F ON F.FILM_ID = L.FILM_ID\n" +
+                    "         JOIN RATINGS AS R ON R.RATING_ID = F.RATING_ID\n" +
+                    "WHERE L.FILM_ID NOT IN (SELECT FILM_ID FROM LIKES WHERE USER_ID = ?)\n" +
+                    "  AND L.USER_ID IN (SELECT USER_ID\n" +
+                    "                    FROM LIKES\n" +
+                    "                    WHERE FILM_ID IN (SELECT FILM_ID FROM LIKES WHERE USER_ID = ?)\n" +
+                    "                      AND USER_ID != ?\n" +
+                    "                    GROUP BY USER_ID\n" +
+                    "                    ORDER BY COUNT(FILM_ID) DESC\n" +
+                    "                    LIMIT 1);";
+
+    String GET_DIRECTOR_FILMS_YEAR_SORTED =
+            "SELECT F.FILM_ID,\n" +
+                    "       FILM_NAME,\n" +
+                    "       FILM_DESCRIPTION,\n" +
+                    "       RELEASE_DATE,\n" +
+                    "       DURATION,\n" +
+                    "       F.RATING_ID,\n" +
+                    "       RATING_NAME\n" +
+                    "FROM DIRECTORS_FILMS DF\n" +
+                    "LEFT JOIN FILMS F on F.FILM_ID = DF.FILM_ID\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN DIRECTORS D on D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
+                    "WHERE DF.DIRECTOR_ID = ?\n" +
+                    "ORDER BY F.RELEASE_DATE ASC\n";
+
+    String GET_DIRECTOR_FILMS_LIKES_SORTED =
+            "SELECT F.FILM_ID,\n" +
+                    "       FILM_NAME,\n" +
+                    "       FILM_DESCRIPTION,\n" +
+                    "       RELEASE_DATE,\n" +
+                    "       DURATION,\n" +
+                    "       F.RATING_ID,\n" +
+                    "       RATING_NAME\n" +
+                    "FROM DIRECTORS_FILMS DF\n" +
+                    "LEFT JOIN FILMS F on F.FILM_ID = DF.FILM_ID\n" +
+                    "LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN DIRECTORS D on D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
+                    "WHERE DF.DIRECTOR_ID = ?\n" +
+                    "GROUP BY F.FILM_ID\n" +
+                    "ORDER BY COUNT(L.FILM_ID) DESC\n";
+
+    String GET_THE_MOST_POPULAR_FILMS_WITH_FILTRES =
+            "SELECT DISTINCT F.*, LF.QL, RATING_NAME\n" +
+                    "FROM FILMS AS F\n" +
+                    "         LEFT JOIN (SELECT L.FILM_ID, COUNT(DISTINCT L.USER_ID) AS QL FROM LIKES AS L GROUP BY L.FILM_ID)\n" +
+                    "    AS LF on F.FILM_ID = LF.FILM_ID\n" +
+                    "         INNER JOIN GENRES_FILMS GF on f.FILM_ID = GF.FILM_ID\n" +
+                    "INNER JOIN RATINGS R on R.RATING_ID = f.RATING_ID\n" +
+                    "WHERE ((YEAR(F.RELEASE_DATE) = ?) or ?=false)\n" +
+                    "  AND ((GF.GENRE_ID = ?) or ? = false)\n" +
+                    "ORDER BY QL DESC\n" +
+                    "LIMIT ?;";
+
+
+    String SEARCH_BY_DIRECTOR =
+            "SELECT F.*,\n" +
+                    "       R.RATING_NAME\n" +
+                    "FROM FILMS F\n" +
+                    "JOIN DIRECTORS_FILMS DF ON F.FILM_ID = DF.FILM_ID\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN DIRECTORS D ON D.DIRECTOR_ID = DF.DIRECTOR_ID\n" +
+                    "WHERE UPPER(D.DIRECTOR_NAME) LIKE UPPER\n" +
+                    "('%" + "chars" + "%')";
+
+    String SEARCH_BY_FILM_NAME =
+            "SELECT F.*,\n" +
+                    "       R.RATING_NAME\n" +
+                    "FROM FILMS F\n" +
+                    "LEFT JOIN RATINGS R ON R.RATING_ID = F.RATING_ID\n" +
+                    "WHERE UPPER(F.FILM_NAME) LIKE UPPER\n" +
+                    "('%" + "chars" + "%')";
+
+    String SQL_QUERY =
+            "SELECT SEARCH.FILM_ID,\n" +
+                    "SEARCH.FILM_NAME,\n" +
+                    "SEARCH.FILM_DESCRIPTION,\n" +
+                    "SEARCH.RELEASE_DATE,\n" +
+                    "SEARCH.DURATION,\n" +
+                    "SEARCH.RATING_ID,\n" +
+                    "SEARCH.RATING_NAME\n" +
+                    "FROM " + "(" + "string" + ") AS SEARCH\n" +
+                    "LEFT JOIN LIKES AS L ON L.FILM_ID = SEARCH.FILM_ID\n" +
+                    "GROUP BY SEARCH.FILM_ID\n" +
+                    "ORDER BY COUNT(L.FILM_ID) DESC";
+
+    String SORTED_FILMS =
+            "SELECT F.FILM_ID,\n" +
+                    "       FILM_NAME,\n" +
+                    "       FILM_DESCRIPTION,\n" +
+                    "       RELEASE_DATE,\n" +
+                    "       DURATION,\n" +
+                    "       F.RATING_ID,\n" +
+                    "       RATING_NAME\n" +
+                    "FROM FILMS F\n" +
+                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
+                    "LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
+                    "GROUP BY F.FILM_ID\n" +
+                    "ORDER BY COUNT(L.FILM_ID) DESC\n";
+
+    String UNION = "\nUNION\n";
+    String DIRECTOR = "director";
+    String TITLE = "title";
+
     Film create(Film film);
 
     Film update(Film film);
+
+    void removeFilm(Integer filmId);
 
     void addLike(Integer filmId, Integer userId);
 
     void removeLike(Integer filmId, Integer userId);
 
     Collection<Film> findPopularFilms(Integer count);
+
+    Collection<Film> findCommonFilms(Integer userId, Integer friendId);
+
+    Collection<Film> getRecommendations(Integer userId);
+
+    Collection<Film> findDirectorFilms(int directorId, String sortBy);
+
+    Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year);
+
+    Collection<Film> search(String query, List<String> searchFilters);
+    Collection<Film> getSortedFilms();
 }

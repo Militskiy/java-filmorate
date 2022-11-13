@@ -225,15 +225,15 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public Map<User, HashMap<Film, Double>> getRateData() {
-        final Map<User, HashMap<Film, Double>> inputData = new HashMap<>();
-        jdbcTemplate.query(GET_LIKES, this::fillInputData)
+        final Map<User, HashMap<Film, Double>> rateData = new HashMap<>();
+        jdbcTemplate.query(GET_LIKES, this::fillRateData)
                 .forEach(like -> {
-                    if (!inputData.containsKey(like.getLeft())) {
-                        inputData.put(like.getLeft(), new HashMap<>());
+                    if (!rateData.containsKey(like.getLeft())) {
+                        rateData.put(like.getLeft(), new HashMap<>());
                     }
-                    inputData.get(like.getLeft()).put(like.getMiddle(), like.getRight());
+                    rateData.get(like.getLeft()).put(like.getMiddle(), like.getRight());
                 });
-        return inputData;
+        return rateData;
     }
 
     private Collection<User> getFilmLikes(Integer filmId) {
@@ -319,7 +319,7 @@ public class FilmDaoImpl implements FilmDao {
                 }).collect(Collectors.toList());
     }
 
-    private Triple<User, Film, Double> fillInputData(ResultSet rs, int rowNum) throws SQLException {
+    private Triple<User, Film, Double> fillRateData(ResultSet rs, int rowNum) throws SQLException {
         User user = userStorage.findById(rs.getInt("user_id"));
         Film film = findById(rs.getInt("film_id"));
         double rate = rs.getDouble("like_rate");

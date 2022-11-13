@@ -166,7 +166,8 @@ public class FilmControllerTest implements TestJsons {
                 RandomString.make(200),
                 TEST_DATE,
                 1,
-                new Mpa(1, "G")
+                new Mpa(1, "G"),
+                4
         );
         String body = objectMapper.writeValueAsString(film);
         this.mockMvc.perform(
@@ -257,6 +258,7 @@ public class FilmControllerTest implements TestJsons {
                 .duration(1)
                 .mpa(MpaDto.builder().id(1).name("G").build())
                 .director(DirectorDto.builder().id(1).name("Director 1").build())
+                .rate(4)
                 .build();
         String updatedFilmBody = objectMapper.writeValueAsString(updatedFilm);
         this.mockMvc.perform(post("/films").content(filmBody).contentType(MediaType.APPLICATION_JSON))
@@ -287,6 +289,7 @@ public class FilmControllerTest implements TestJsons {
                 .mpa(MpaDto.builder().id(1).name("G").build())
                 .director(DirectorDto.builder().id(1).name("Director 1").build())
                 .genre(GenreDto.builder().id(1).name("Комедия").build())
+                .rate(4)
                 .build();
         String updatedFilmBody = objectMapper.writeValueAsString(updatedFilm);
         this.mockMvc.perform(post("/films").content(filmBody).contentType(MediaType.APPLICATION_JSON))

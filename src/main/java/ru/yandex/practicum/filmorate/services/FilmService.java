@@ -68,7 +68,6 @@ public class FilmService {
         return filmStorage.getTheMostPopularFilmsWithFilter(count, genreId, year);
     }
 
-
     public Collection<Film> search(String query, List<String> searchFilters) {
 
         if (searchFilters.size() > new HashSet<>(searchFilters).size()) {

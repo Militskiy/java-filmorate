@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.services;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -17,7 +16,7 @@ public class UserService {
 
     @Qualifier("UserDaoImpl")
     private final UserDao userStorage;
-    private final FilmDao filmStorage;
+    private final RecommendationService recommendationService;
 
     public Collection<User> findAllUsers() {
         return userStorage.findAll();
@@ -55,7 +54,7 @@ public class UserService {
     }
 
     public Collection<Film> getRecommendations(Integer userId) {
-        return filmStorage.getRecommendations(userId);
+        return recommendationService.getRecommendations(findUserById(userId));
     }
 
     public User findUserById(Integer userId) {

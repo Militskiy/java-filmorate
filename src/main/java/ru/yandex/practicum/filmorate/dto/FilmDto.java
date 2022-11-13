@@ -36,7 +36,7 @@ public class FilmDto {
     @NotNull
     MpaDto mpa;
     @Schema(example = "4")
-    int rate;
+    double rate;
     @Singular
     Set<GenreDto> genres;
     @Schema(example = "[]")

@@ -90,7 +90,7 @@ public class FilmController {
     public void addLike(
             @PathVariable @Min(1) Integer id,
             @PathVariable @Min(1) Integer userId,
-            @RequestParam(defaultValue = "4", required = false) @Min(1) @Max(10) Integer rate
+            @RequestParam(defaultValue = "6", required = false) @Min(1) @Max(10) Integer rate
     ) {
         log.debug("Adding user with id: {} like to film with id: {}", userId, id);
         filmService.addLike(id, userId, rate);

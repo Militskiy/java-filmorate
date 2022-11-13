@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS films
     film_description varchar(200),
     release_date     date        NOT NULL,
     duration         integer     NOT NULL,
-    rating_id        INTEGER REFERENCES ratings (rating_id) ON DELETE CASCADE
+    rating_id        INTEGER REFERENCES ratings (rating_id) ON DELETE CASCADE,
+    film_rate        FLOAT       NOT NULL DEFAULT 4
 );
 
 CREATE TABLE IF NOT EXISTS users
@@ -28,8 +29,9 @@ CREATE TABLE IF NOT EXISTS users
 
 CREATE TABLE IF NOT EXISTS likes
 (
-    user_id INTEGER REFERENCES users (user_id) ON DELETE CASCADE,
-    film_id INTEGER REFERENCES films (film_id) ON DELETE CASCADE,
+    user_id   INTEGER REFERENCES users (user_id) ON DELETE CASCADE,
+    film_id   INTEGER REFERENCES films (film_id) ON DELETE CASCADE,
+    like_rate INTEGER NOT NULL DEFAULT 6,
     PRIMARY KEY (user_id, film_id)
 );
 

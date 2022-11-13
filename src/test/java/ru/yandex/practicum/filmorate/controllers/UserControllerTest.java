@@ -336,4 +336,12 @@ public class UserControllerTest implements TestJsons {
                         "}" +
                         "]"));
     }
+
+    @Test
+    @Sql(scripts = {"file:assets/scripts/restart.sql", "file:assets/scripts/recommendation_test.sql"})
+    void shouldGetRecommendation() throws Exception {
+        this.mockMvc.perform(get("/users/3/recommendations"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(RECOMMENDATIONS));
+    }
 }

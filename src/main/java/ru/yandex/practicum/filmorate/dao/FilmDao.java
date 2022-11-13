@@ -1,9 +1,12 @@
 package ru.yandex.practicum.filmorate.dao;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface FilmDao extends Dao<Film> {
@@ -99,7 +102,7 @@ public interface FilmDao extends Dao<Film> {
                     "LIMIT ?;";
 
     String FIND_COMMON_FILMS_COUPLE_FRIENDS =
-                    "SELECT F.*,\n" +
+            "SELECT F.*,\n" +
                     "R.RATING_NAME\n" +
                     "FROM FILMS F\n" +
                     "         JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
@@ -116,19 +119,7 @@ public interface FilmDao extends Dao<Film> {
 
     String DELETE_FILM = "DELETE FROM FILMS WHERE FILM_ID = ?";
 
-    String RECOMMENDED_FILMS =
-            "SELECT F.FILM_ID, FILM_NAME, FILM_DESCRIPTION, RELEASE_DATE, DURATION, F.RATING_ID, RATING_NAME, FILM_RATE\n" +
-                    "FROM LIKES AS L\n" +
-                    "         JOIN FILMS AS F ON F.FILM_ID = L.FILM_ID\n" +
-                    "         JOIN RATINGS AS R ON R.RATING_ID = F.RATING_ID\n" +
-                    "WHERE L.FILM_ID NOT IN (SELECT FILM_ID FROM LIKES WHERE USER_ID = ?)\n" +
-                    "  AND L.USER_ID IN (SELECT USER_ID\n" +
-                    "                    FROM LIKES\n" +
-                    "                    WHERE FILM_ID IN (SELECT FILM_ID FROM LIKES WHERE USER_ID = ?)\n" +
-                    "                      AND USER_ID != ?\n" +
-                    "                    GROUP BY USER_ID\n" +
-                    "                    ORDER BY FILM_RATE DESC, COUNT(FILM_ID) DESC\n" +
-                    "                    LIMIT 1);";
+    String GET_LIKES = "SELECT * FROM LIKES";
 
     String GET_DIRECTOR_FILMS_YEAR_SORTED =
             "SELECT F.FILM_ID,\n" +
@@ -242,12 +233,13 @@ public interface FilmDao extends Dao<Film> {
 
     Collection<Film> findCommonFilms(Integer userId, Integer friendId);
 
-    Collection<Film> getRecommendations(Integer userId);
-
     Collection<Film> findDirectorFilms(int directorId, String sortBy);
 
     Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year);
 
     Collection<Film> search(String query, List<String> searchFilters);
+
     Collection<Film> getSortedFilms();
+
+    Map<User, HashMap<Film, Double>> getRateData();
 }

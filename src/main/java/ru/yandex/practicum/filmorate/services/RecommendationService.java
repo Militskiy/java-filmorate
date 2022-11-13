@@ -75,13 +75,11 @@ public class RecommendationService {
                 uPred.put(film, 0.0);
             });
             userRates.forEach(((film, rate) -> diff.forEach(((film1, rateDiff) -> {
-                try {
+                if (rateDiff.containsKey(film)) {
                     double predictedValue = rateDiff.get(film) + userRates.get(film);
                     double finalValue = predictedValue * freq.get(film1).get(film);
                     uPred.put(film1, uPred.get(film1) + finalValue);
                     uFreq.put(film1, uFreq.get(film1) + freq.get(film1).get(film));
-                } catch (NullPointerException e) {
-                    // do nothing
                 }
             }))));
             HashMap<Film, Double> clean = new HashMap<>();

@@ -23,7 +23,7 @@ public class RecommendationService {
     public Collection<Film> getRecommendations(User inputUser) {
         diff = new HashMap<>();
         freq = new HashMap<>();
-        Map<User, HashMap<Film, Double>> inputData = filmStorage.getRateData();
+        Map<User, Map<Film, Double>> inputData = filmStorage.getRateData();
         buildDifferencesMatrix(inputData);
         predict(inputData);
         if (outputData.containsKey(inputUser)) {
@@ -37,7 +37,7 @@ public class RecommendationService {
         }
     }
 
-    private void buildDifferencesMatrix(Map<User, HashMap<Film, Double>> data) {
+    private void buildDifferencesMatrix(Map<User, Map<Film, Double>> data) {
         data.forEach((user, userRates) -> userRates.forEach((film, rate) -> {
             if (!diff.containsKey(film)) {
                 diff.put(film, new HashMap<>());
@@ -64,7 +64,7 @@ public class RecommendationService {
         })));
     }
 
-    private void predict(Map<User, HashMap<Film, Double>> data) {
+    private void predict(Map<User, Map<Film, Double>> data) {
         outputData = new HashMap<>();
         HashMap<Film, Double> uPred = new HashMap<>();
         HashMap<Film, Integer> uFreq = new HashMap<>();

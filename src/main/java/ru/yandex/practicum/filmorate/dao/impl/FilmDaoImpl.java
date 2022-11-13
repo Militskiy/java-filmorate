@@ -32,7 +32,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -224,16 +223,10 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
-    public Map<User, HashMap<Film, Double>> getRateData() {
-        final Map<User, HashMap<Film, Double>> rateData = new HashMap<>();
-        jdbcTemplate.query(GET_LIKES, this::fillRateData)
-                .forEach(like -> {
-                    if (!rateData.containsKey(like.getLeft())) {
-                        rateData.put(like.getLeft(), new HashMap<>());
-                    }
-                    rateData.get(like.getLeft()).put(like.getMiddle(), like.getRight());
-                });
-        return rateData;
+    public Map<User, Map<Film, Double>> getRateData() {
+        return jdbcTemplate.query(GET_LIKES, this::fillRateData)
+                .stream()
+                .collect(Collectors.groupingBy(Triple::getLeft, Collectors.toMap(Triple::getMiddle, Triple::getRight)));
     }
 
     private Collection<User> getFilmLikes(Integer filmId) {

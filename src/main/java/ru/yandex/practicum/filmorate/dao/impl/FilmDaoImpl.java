@@ -269,7 +269,7 @@ public class FilmDaoImpl implements FilmDao {
         int duration = rs.getInt("duration");
         int ratingId = rs.getInt("rating_id");
         String ratingName = rs.getString("rating_name");
-        int rate = rs.getInt("film_rate");
+        double rate = rs.getDouble("film_rate");
         return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName), rate);
     }
 
@@ -322,7 +322,7 @@ public class FilmDaoImpl implements FilmDao {
     private Triple<User, Film, Double> fillInputData(ResultSet rs, int rowNum) throws SQLException {
         User user = userStorage.findById(rs.getInt("user_id"));
         Film film = findById(rs.getInt("film_id"));
-        double rate = rs.getInt("like_rate");
+        double rate = rs.getDouble("like_rate");
         return Triple.of(user, film, rate);
     }
 }

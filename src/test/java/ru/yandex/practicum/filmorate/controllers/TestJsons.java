@@ -180,7 +180,7 @@ public interface TestJsons {
 
    String RECOMMENDATIONS =
            "[{\"id\":1,\"name\":\"Film1\",\"description\":\"Test film1\",\"releaseDate\":\"2021-11-01\"," +
-                   "\"duration\":120,\"mpa\":{\"id\":1,\"name\":\"G\"},\"rate\":4.0,\"genres\":[]," +
+                   "\"duration\":120,\"mpa\":{\"id\":1,\"name\":\"G\"},\"rate\":9.0,\"genres\":[]," +
                    "\"userLikes\":[{\"id\":1,\"email\":\"user1@test.com\",\"login\":\"user1\",\"name\":\"test1\"," +
                    "\"birthday\":\"2021-11-01\",\"friends\":[]},{\"id\":2,\"email\":\"user2@test.com\"," +
                    "\"login\":\"user2\",\"name\":\"test2\",\"birthday\":\"2020-11-01\",\"friends\":[]}]," +

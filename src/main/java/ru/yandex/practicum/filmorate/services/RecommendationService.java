@@ -38,71 +38,66 @@ public class RecommendationService {
     }
 
     private void buildDifferencesMatrix(Map<User, HashMap<Film, Double>> data) {
-        for (HashMap<Film, Double> user : data.values()) {
-            for (Map.Entry<Film, Double> e : user.entrySet()) {
-                if (!diff.containsKey(e.getKey())) {
-                    diff.put(e.getKey(), new HashMap<>());
-                    freq.put(e.getKey(), new HashMap<>());
-                }
-                for (Map.Entry<Film, Double> e2 : user.entrySet()) {
-                    int oldCount = 0;
-                    if (freq.get(e.getKey()).containsKey(e2.getKey())) {
-                        oldCount = freq.get(e.getKey()).get(e2.getKey());
-                    }
-                    double oldDiff = 0.0;
-                    if (diff.get(e.getKey()).containsKey(e2.getKey())) {
-                        oldDiff = diff.get(e.getKey()).get(e2.getKey());
-                    }
-                    double observedDiff = e.getValue() - e2.getValue();
-                    freq.get(e.getKey()).put(e2.getKey(), oldCount + 1);
-                    diff.get(e.getKey()).put(e2.getKey(), oldDiff + observedDiff);
-                }
+        data.forEach((user, userRates) -> userRates.forEach((film, rate) -> {
+            if (!diff.containsKey(film)) {
+                diff.put(film, new HashMap<>());
+                freq.put(film, new HashMap<>());
             }
-        }
-        for (Film film : diff.keySet()) {
-            for (Film film1 : diff.get(film).keySet()) {
-                double oldValue = diff.get(film).get(film1);
-                int count = freq.get(film).get(film1);
-                diff.get(film).put(film1, oldValue / count);
-            }
-        }
+            userRates.forEach(((film1, rate1) -> {
+                int oldCount = 0;
+                if (freq.get(film).containsKey(film1)) {
+                    oldCount = freq.get(film).get(film1);
+                }
+                double oldDiff = 0.0;
+                if (diff.get(film).containsKey(film1)) {
+                    oldDiff = diff.get(film).get(film1);
+                }
+                double observedDiff = rate - rate1;
+                freq.get(film).put(film1, oldCount + 1);
+                diff.get(film).put(film1, oldDiff + observedDiff);
+            }));
+        }));
+        diff.forEach(((film, rateDiff) -> rateDiff.forEach((film1, rateDiff1) -> {
+            double oldValue = rateDiff1;
+            int count = freq.get(film).get(film1);
+            diff.get(film).put(film1, oldValue / count);
+        })));
     }
 
     private void predict(Map<User, HashMap<Film, Double>> data) {
         outputData = new HashMap<>();
         HashMap<Film, Double> uPred = new HashMap<>();
         HashMap<Film, Integer> uFreq = new HashMap<>();
-        for (Map.Entry<User, HashMap<Film, Double>> e : data.entrySet()) {
-            for (Film film : diff.keySet()) {
+
+        data.forEach(((user, userRates) -> {
+            diff.forEach((film, rateDiff) -> {
                 uFreq.put(film, 0);
                 uPred.put(film, 0.0);
-            }
-            for (Film film : e.getValue().keySet()) {
-                for (Film film1 : diff.keySet()) {
-                    try {
-                        double predictedValue = diff.get(film1).get(film) + e.getValue().get(film);
-                        double finalValue = predictedValue * freq.get(film1).get(film);
-                        uPred.put(film1, uPred.get(film1) + finalValue);
-                        uFreq.put(film1, uFreq.get(film1) + freq.get(film1).get(film));
-                    } catch (NullPointerException e1) {
-                        // do nothing
-                    }
+            });
+            userRates.forEach(((film, rate) -> diff.forEach(((film1, rateDiff) -> {
+                try {
+                    double predictedValue = rateDiff.get(film) + userRates.get(film);
+                    double finalValue = predictedValue * freq.get(film1).get(film);
+                    uPred.put(film1, uPred.get(film1) + finalValue);
+                    uFreq.put(film1, uFreq.get(film1) + freq.get(film1).get(film));
+                } catch (NullPointerException e) {
+                    // do nothing
                 }
-            }
+            }))));
             HashMap<Film, Double> clean = new HashMap<>();
-            for (Film film : uPred.keySet()) {
+            uPred.forEach(((film, predRate) -> {
                 if (uFreq.get(film) > 0) {
                     clean.put(film, uPred.get(film) / uFreq.get(film));
                 }
-            }
-            for (Film film : filmStorage.findAll()) {
-                if (e.getValue().containsKey(film)) {
-                    clean.put(film, e.getValue().get(film));
+            }));
+            filmStorage.findAll().forEach(film -> {
+                if (userRates.containsKey(film)) {
+                    clean.put(film, userRates.get(film));
                 } else if (!clean.containsKey(film)) {
                     clean.put(film, 1.0);
                 }
-            }
-            outputData.put(e.getKey(), clean);
-        }
+            });
+            outputData.put(user, clean);
+        }));
     }
 }

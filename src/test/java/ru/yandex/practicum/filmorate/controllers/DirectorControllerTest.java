@@ -33,7 +33,11 @@ class DirectorControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void getDirectors() throws Exception {
         mockMvc.perform(
                         get("/directors"))
@@ -42,7 +46,11 @@ class DirectorControllerTest {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void getDirector() throws Exception {
         mockMvc.perform(
                         get("/directors/1"))
@@ -60,7 +68,10 @@ class DirectorControllerTest {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/restart.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql"
+    })
     void createDirector() throws Exception {
 
         DirectorDto director = DirectorDto.builder().name("Director 1").build();
@@ -74,7 +85,11 @@ class DirectorControllerTest {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void updateDirector() throws Exception {
 
         DirectorDto director = DirectorDto.builder().id(1).name("Director 2").build();
@@ -89,7 +104,10 @@ class DirectorControllerTest {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/restart.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql"
+    })
     void updateDirectorFailNotFound() throws Exception {
 
         Director director = new Director(1, "Director 1");
@@ -103,19 +121,26 @@ class DirectorControllerTest {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void deleteDirector() throws Exception {
         mockMvc.perform(
                         delete("/directors/1"))
                 .andExpect(status().isOk());
         this.mockMvc.perform(
-                get("/directors"))
+                        get("/directors"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/restart.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql"
+    })
     void deleteDirectorFailNotFound() throws Exception {
 
         Director director = new Director(1, "Director 1");

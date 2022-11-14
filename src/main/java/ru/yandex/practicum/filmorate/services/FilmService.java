@@ -38,8 +38,8 @@ public class FilmService {
         filmStorage.removeFilm(filmId);
     }
 
-    public void addLike(Integer filmId, Integer userId) {
-        filmStorage.addLike(filmId, userId);
+    public void addLike(Integer filmId, Integer userId, Integer rate) {
+        filmStorage.addLike(filmId, userId, rate);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
@@ -68,7 +68,6 @@ public class FilmService {
         return filmStorage.getTheMostPopularFilmsWithFilter(count, genreId, year);
     }
 
-
     public Collection<Film> search(String query, List<String> searchFilters) {
 
         if (searchFilters.size() > new HashSet<>(searchFilters).size()) {
@@ -93,9 +92,5 @@ public class FilmService {
             default:
                 throw new BadArgumentsException("Bad search filter parameters, too much filters.");
         }
-    }
-
-    public Collection<Film> getSortedFilms() {
-        return filmStorage.getSortedFilms();
     }
 }

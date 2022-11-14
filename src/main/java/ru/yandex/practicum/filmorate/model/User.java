@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Singular;
 
 import java.time.LocalDate;
@@ -14,8 +15,9 @@ import java.util.Set;
 
 @Data
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
-
+    @EqualsAndHashCode.Include
     private int id;
     private String email;
     private String login;

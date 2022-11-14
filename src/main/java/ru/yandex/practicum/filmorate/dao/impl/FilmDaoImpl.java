@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.tuple.Triple;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -32,6 +33,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -79,6 +81,7 @@ public class FilmDaoImpl implements FilmDao {
 
     @Override
     public Film update(Film film) {
+        findById(film.getId());
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         getFilmParameters(parameters, film);
         film.getDirectors().forEach(director -> directorStorage.findById(director.getId()).orElseThrow(
@@ -133,18 +136,13 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
-    public Collection<Film> getRecommendations(Integer userId) {
-        return addFilmFields(jdbcTemplate.getJdbcTemplate().query(RECOMMENDED_FILMS,
-                (rowSet, rowNum) -> makeFilm(rowSet), userId, userId, userId));
-    }
-
-    @Override
-    public void addLike(Integer filmId, Integer userId) {
+    public void addLike(Integer filmId, Integer userId, Integer rate) {
         userStorage.findById(userId);
         if (findById(filmId).getUserLikes()
                 .stream()
                 .noneMatch(user -> user.getId() == userId)) {
-            jdbcTemplate.getJdbcTemplate().update(ADD_LIKE, userId, filmId);
+            jdbcTemplate.getJdbcTemplate().update(ADD_LIKE, userId, filmId, rate);
+            jdbcTemplate.getJdbcTemplate().update(UPDATE_FILM_RATE, filmId, filmId);
             eventStorage.createEvent(userId, EventType.LIKE, Operation.ADD, filmId);
         } else {
             throw new BadArgumentsException("Film already liked");
@@ -158,6 +156,7 @@ public class FilmDaoImpl implements FilmDao {
                 .stream()
                 .anyMatch(user -> user.getId() == userId)) {
             jdbcTemplate.getJdbcTemplate().update(DELETE_LIKE, filmId, userId);
+            jdbcTemplate.getJdbcTemplate().update(UPDATE_FILM_RATE, filmId, filmId);
             eventStorage.createEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
         } else {
             throw new BadArgumentsException("Film not liked");
@@ -197,13 +196,32 @@ public class FilmDaoImpl implements FilmDao {
             int count, Optional<Integer> genreId, Optional<Integer> year
     ) {
         return addFilmFields(jdbcTemplate.getJdbcTemplate()
-                .query(GET_THE_MOST_POPULAR_FILMS_WITH_FILTRES, (rs, rowNum) -> makeFilm(rs),
+                .query(GET_THE_MOST_POPULAR_FILMS_WITH_FILTERS, (rs, rowNum) -> makeFilm(rs),
                         year.orElse(0), year.isPresent(), genreId.orElse(0), genreId.isPresent(), count));
     }
 
     @Override
-    public Collection<Film> getSortedFilms() {
-        return addFilmFields(jdbcTemplate.getJdbcTemplate().query(SORTED_FILMS, (rs, rowNum) -> makeFilm(rs)));
+    public Collection<Film> search(String query, List<String> searchFilters) {
+        StringBuilder sb = new StringBuilder();
+        String searchByDirector = SEARCH_BY_DIRECTOR.replace("chars", query);
+        String searchByFilmName = SEARCH_BY_FILM_NAME.replace("chars", query);
+
+        for (int i = 0; i < searchFilters.size(); i++) {
+            String s = searchFilters.get(i);
+            if (s.equals(DIRECTOR)) sb.append(searchByDirector);
+            if (s.equals(TITLE)) sb.append(searchByFilmName);
+            if (!(i == searchFilters.size() - 1)) sb.append(UNION);
+        }
+
+        String sqlQuery = SQL_QUERY.replace("string", sb);
+        return addFilmFields(jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs)));
+    }
+
+    @Override
+    public Map<User, Map<Film, Double>> getRateData() {
+        return jdbcTemplate.query(GET_LIKES, this::fillRateData)
+                .stream()
+                .collect(Collectors.groupingBy(Triple::getLeft, Collectors.toMap(Triple::getMiddle, Triple::getRight)));
     }
 
     private Collection<User> getFilmLikes(Integer filmId) {
@@ -239,7 +257,8 @@ public class FilmDaoImpl implements FilmDao {
         int duration = rs.getInt("duration");
         int ratingId = rs.getInt("rating_id");
         String ratingName = rs.getString("rating_name");
-        return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName));
+        double rate = rs.getDouble("film_rate");
+        return new Film(id, filmName, filmDescription, releaseDate, duration, new Mpa(ratingId, ratingName), rate);
     }
 
     private void filmGenreUpdate(Film film) {
@@ -277,23 +296,6 @@ public class FilmDaoImpl implements FilmDao {
                 });
     }
 
-    @Override
-    public Collection<Film> search(String query, List<String> searchFilters) {
-        StringBuilder sb = new StringBuilder();
-        String searchByDirector = SEARCH_BY_DIRECTOR.replace("chars", query);
-        String searchByFilmName = SEARCH_BY_FILM_NAME.replace("chars", query);
-
-        for (int i = 0; i < searchFilters.size(); i++) {
-            String s = searchFilters.get(i);
-            if (s.equals(DIRECTOR)) sb.append(searchByDirector);
-            if (s.equals(TITLE)) sb.append(searchByFilmName);
-            if (!(i == searchFilters.size() - 1)) sb.append(UNION);
-        }
-
-        String sqlQuery = SQL_QUERY.replace("string", sb);
-        return addFilmFields(jdbcTemplate.getJdbcTemplate().query(sqlQuery, (rs, rowNum) -> makeFilm(rs)));
-    }
-
 
     private Collection<Film> addFilmFields(Collection<Film> films) {
         return films
@@ -303,5 +305,12 @@ public class FilmDaoImpl implements FilmDao {
                     getFilmGenres(film.getId()).forEach(film::addGenre);
                     getFilmDirectors(film.getId()).forEach(film::addDirector);
                 }).collect(Collectors.toList());
+    }
+
+    private Triple<User, Film, Double> fillRateData(ResultSet rs, int rowNum) throws SQLException {
+        User user = userStorage.findById(rs.getInt("user_id"));
+        Film film = findById(rs.getInt("film_id"));
+        double rate = rs.getDouble("like_rate");
+        return Triple.of(user, film, rate);
     }
 }

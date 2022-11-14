@@ -43,7 +43,11 @@ public class UserControllerTest implements TestJsons {
     private ObjectMapper objectMapper;
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void shouldFindAllUsers() throws Exception {
         this.mockMvc.perform(
                         get("/users"))
@@ -52,7 +56,10 @@ public class UserControllerTest implements TestJsons {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/restart.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql"
+    })
     void givenNewUserWithNullName_whenCreated_thenAddsUserWithNameEqualsLogin() throws Exception {
         //given
 
@@ -226,7 +233,11 @@ public class UserControllerTest implements TestJsons {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void createsAndUpdatesUser() throws Exception {
         UserDto user = UserDto.builder()
                 .email("email@email.com")
@@ -252,7 +263,11 @@ public class UserControllerTest implements TestJsons {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void user3shouldFriendUser1ThenShouldFindUser1AsFriend() throws Exception {
         this.mockMvc.perform(put("/users/3/friends/1"))
                 .andExpect(status().isOk());
@@ -262,7 +277,11 @@ public class UserControllerTest implements TestJsons {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void user2shouldUnfriendUser1ThenShouldFindNoFriends() throws Exception {
         this.mockMvc.perform(delete("/users/2/friends/1"))
                 .andExpect(status().isOk());
@@ -272,7 +291,11 @@ public class UserControllerTest implements TestJsons {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void user2shouldFriendUser3ThenShouldFindCommonFriend3WithUser1() throws Exception {
         this.mockMvc.perform(put("/users/2/friends/3"))
                 .andExpect(status().isOk());
@@ -297,14 +320,22 @@ public class UserControllerTest implements TestJsons {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void whenAddingFriendThatIsAlreadyFriendShouldThrowBadArgument() throws Exception {
         this.mockMvc.perform(put("/users/1/friends/2"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void whenAddingFriendThatIsUnknownShouldThrowNoSuchUser() throws Exception {
         this.mockMvc.perform(put("/users/1/friends/5"))
                 .andExpect(status().isNotFound());
@@ -313,14 +344,22 @@ public class UserControllerTest implements TestJsons {
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void tryToAddSelfAsFriend() throws Exception {
         this.mockMvc.perform(put("/users/1/friends/1"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })
     void shouldGetAddFriendEvent() throws Exception {
         this.mockMvc.perform(put("/users/2/friends/3"))
                 .andExpect(status().isOk());
@@ -335,5 +374,17 @@ public class UserControllerTest implements TestJsons {
                         "\"entityId\":3" +
                         "}" +
                         "]"));
+    }
+
+    @Test
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/recommendation_test.sql"
+    })
+    void shouldGetRecommendationForFilm3() throws Exception {
+        this.mockMvc.perform(get("/users/3/recommendations"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(RECOMMENDATIONS));
     }
 }

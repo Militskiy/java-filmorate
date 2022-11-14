@@ -35,6 +35,8 @@ public class FilmDto {
     long duration;
     @NotNull
     MpaDto mpa;
+    @Schema(example = "4")
+    double rate;
     @Singular
     Set<GenreDto> genres;
     @Schema(example = "[]")

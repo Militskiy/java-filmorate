@@ -32,16 +32,22 @@ class ReviewControllerTest implements TestJsons{
     private MockMvc mockMvc;
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldFindAll() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldFindAll() throws Exception {
         this.mockMvc.perform(get("/reviews"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(FIND_ALL_REVIEWS));
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldFindReviewWithId2ForFilm1() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldFindReviewWithId2ForFilm1() throws Exception {
         this.mockMvc.perform(get("/reviews?filmId=1&count=1"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[" +
@@ -68,8 +74,11 @@ class ReviewControllerTest implements TestJsons{
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldFindReviewWithId1() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldFindReviewWithId1() throws Exception {
         this.mockMvc.perform(get("/reviews/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{" +
@@ -82,8 +91,11 @@ class ReviewControllerTest implements TestJsons{
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldCreateReviewFromUser3ToFilm3() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldCreateReviewFromUser3ToFilm3() throws Exception {
 
         final String body = "{\n" +
                 "  \"content\": \"Test review\",\n" +
@@ -97,8 +109,11 @@ class ReviewControllerTest implements TestJsons{
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldUpdateReviewFromUser1ToFilm1ToNegative() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldUpdateReviewFromUser1ToFilm1ToNegative() throws Exception {
 
         final String body = "{\n" +
                 "  \"reviewId\": 1,\n" +
@@ -113,8 +128,11 @@ class ReviewControllerTest implements TestJsons{
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldDeleteReview1And3ThenFindReview2() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldDeleteReview1And3ThenFindReview2() throws Exception {
 
         this.mockMvc.perform(delete("/reviews/1"))
                 .andExpect(status().isOk());
@@ -141,8 +159,11 @@ class ReviewControllerTest implements TestJsons{
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldAddLikeToReview3ThenFindReview3Second() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldAddLikeToReview3ThenFindReview3Second() throws Exception {
         this.mockMvc.perform(put("/reviews/3/like/2"))
                 .andExpect(status().isOk());
         this.mockMvc.perform(get("/reviews"))
@@ -151,32 +172,44 @@ class ReviewControllerTest implements TestJsons{
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldThrowBadArgumentExceptionWhenLikingOwnReview() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldThrowBadArgumentExceptionWhenLikingOwnReview() throws Exception {
         this.mockMvc.perform(put("/reviews/1/like/1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException));
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldThrowReviewNotFoundExceptionWhenLikingNonExistentReview() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldThrowReviewNotFoundExceptionWhenLikingNonExistentReview() throws Exception {
         this.mockMvc.perform(put("/reviews/99/like/1"))
                 .andExpect(status().isNotFound())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof NoSuchReviewException));
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldThrowUserNotFoundExceptionWhenLikingWithNonExistentUser() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldThrowUserNotFoundExceptionWhenLikingWithNonExistentUser() throws Exception {
         this.mockMvc.perform(put("/reviews/1/like/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof NoSuchUserException));
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldThrowBadArgumentExceptionWhenLiking2TimesSameReview() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldThrowBadArgumentExceptionWhenLiking2TimesSameReview() throws Exception {
         this.mockMvc.perform(put("/reviews/3/like/2"))
                 .andExpect(status().isOk());
         this.mockMvc.perform(put("/reviews/3/like/2"))
@@ -185,8 +218,11 @@ class ReviewControllerTest implements TestJsons{
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldDeleteLikeFromReview3() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldDeleteLikeFromReview3() throws Exception {
         this.mockMvc.perform(delete("/reviews/3/like/1"))
                 .andExpect(status().isOk());
         this.mockMvc.perform(get("/reviews/3"))
@@ -201,8 +237,11 @@ class ReviewControllerTest implements TestJsons{
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldDeleteDislikeFromReview2() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldDeleteDislikeFromReview2() throws Exception {
         this.mockMvc.perform(delete("/reviews/2/dislike/1"))
                 .andExpect(status().isOk());
         this.mockMvc.perform(get("/reviews/2"))
@@ -217,16 +256,22 @@ class ReviewControllerTest implements TestJsons{
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldThrowBadArgumentWhenDeletingUser2LikeFromReview2() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldThrowBadArgumentWhenDeletingUser2LikeFromReview2() throws Exception {
         this.mockMvc.perform(delete("/reviews/2/like/2"))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException));
     }
 
     @Test
-    @Sql(scripts = {"file:assets/scripts/test_setup.sql"})
-    void shouldThrowBadArgumentWhenDeletingUser2DislikeFromReview2() throws Exception {
+    @Sql(scripts = {
+            "file:src/main/resources/schema.sql",
+            "file:src/main/resources/data.sql",
+            "file:assets/scripts/test_data.sql"
+    })    void shouldThrowBadArgumentWhenDeletingUser2DislikeFromReview2() throws Exception {
         this.mockMvc.perform(delete("/reviews/2/dislike/2"))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof BadArgumentsException));

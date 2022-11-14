@@ -201,11 +201,6 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
-    public Collection<Film> getSortedFilms() {
-        return addFilmFields(jdbcTemplate.getJdbcTemplate().query(SORTED_FILMS, (rs, rowNum) -> makeFilm(rs)));
-    }
-
-    @Override
     public Collection<Film> search(String query, List<String> searchFilters) {
         StringBuilder sb = new StringBuilder();
         String searchByDirector = SEARCH_BY_DIRECTOR.replace("chars", query);

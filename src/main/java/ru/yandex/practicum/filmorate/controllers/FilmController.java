@@ -18,8 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.mappers.FilmMapper;
-import ru.yandex.practicum.filmorate.exceptions.BadArgumentsException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.services.FilmService;
 import ru.yandex.practicum.filmorate.validators.ValidationSequence;
 
@@ -80,9 +78,11 @@ public class FilmController {
 
     @PutMapping
     @Operation(summary = "Update a film")
-    public Film updateFilm(@Validated(ValidationSequence.class) @RequestBody Film film) {
+    public ResponseEntity<FilmDto> updateFilm(@Validated(ValidationSequence.class) @RequestBody FilmDto film) {
         log.debug("Updating film with id: {}", film.getId());
-        return filmService.updateFilm(film);
+        return ResponseEntity.ok(FilmMapper.INSTANCE.filmToFilmDto(
+                filmService.updateFilm(FilmMapper.INSTANCE.filmDtoToFilm(film))
+        ));
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -108,57 +108,60 @@ public class FilmController {
 
     @GetMapping("/director/{directorId}")
     @Operation(summary = "Get all films by director id")
-    public Collection<Film> getDirectorFilmsSorted(
+    public ResponseEntity<Collection<FilmDto>> getDirectorFilmsSorted(
             @PathVariable int directorId,
             @RequestParam(defaultValue = "year") String sortBy
     ) {
         log.debug("Getting all films by director");
-        return filmService.getDirectorFilmsSorted(directorId, sortBy);
+        return ResponseEntity.ok(filmService.getDirectorFilmsSorted(directorId, sortBy)
+                .stream()
+                .map(FilmMapper.INSTANCE::filmToFilmDto)
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/popular")
     @Operation(summary = "Get the most popular films with filter: year, genre")
-    public Collection<Film> getTheMostPopularFilmsWithFilter(
+    public ResponseEntity<Collection<FilmDto>> getTheMostPopularFilmsWithFilter(
             @RequestParam(value = "count", defaultValue = "10", required = false) Integer limit,
             @RequestParam(value = "genreId") Optional<Integer> genreId,
             @RequestParam(value = "year") Optional<Integer> year
     ) {
         if (genreId.isPresent() || year.isPresent()) {
             log.debug("Getting the most popular films with filter");
-            return filmService.getTheMostPopularFilmsWithFilter(limit, genreId, year);
+            return ResponseEntity.ok(filmService.getTheMostPopularFilmsWithFilter(limit, genreId, year)
+                    .stream()
+                    .map(FilmMapper.INSTANCE::filmToFilmDto)
+                    .collect(Collectors.toList()));
         }
-
-        return filmService.findPopularFilms(limit);
+        return ResponseEntity.ok(filmService.findPopularFilms(limit)
+                .stream()
+                .map(FilmMapper.INSTANCE::filmToFilmDto)
+                .collect(Collectors.toList()));
     }
 
 
     @GetMapping("/search")
     @Operation(summary = "Getting films sorted by filters")
-    public Collection<Film> search(
-            @RequestParam(required = false) String query,
-            @RequestParam(required = false) List<String> by
+    public ResponseEntity<Collection<FilmDto>> search(
+            @RequestParam String query,
+            @RequestParam List<String> by
     ) {
-        Collection<Film> films;
-
-        if (by != null && query != null) {
-            films = filmService.search(query, by);
-            log.debug("Getting sorted films by filters");
-        } else if (by == null && query == null) {
-            films = filmService.getSortedFilms();
-            log.debug("Getting films sorted by popularity without filters");
-        } else {
-            log.debug("Bad filters request. One parameter is null");
-            throw new BadArgumentsException("Bad filters request.");
-        }
-        return films;
+        log.debug("Getting sorted films by filters");
+        return ResponseEntity.ok(filmService.search(query, by)
+                .stream()
+                .map(FilmMapper.INSTANCE::filmToFilmDto)
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/common")
     @Operation(summary = "Get a film list of common films between two users, sorted by popularity")
-    public Collection<Film> findCommonFilmList(
+    public ResponseEntity<Collection<FilmDto>> findCommonFilmList(
             @RequestParam(value = "userId") Integer userId,
             @RequestParam(value = "friendId") Integer friendId
     ) {
-        return filmService.findCommonFilms(userId, friendId);
+        return ResponseEntity.ok(filmService.findCommonFilms(userId, friendId)
+                .stream()
+                .map(FilmMapper.INSTANCE::filmToFilmDto)
+                .collect(Collectors.toList()));
     }
 }

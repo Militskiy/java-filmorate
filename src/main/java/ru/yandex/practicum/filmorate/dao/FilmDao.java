@@ -199,21 +199,6 @@ public interface FilmDao extends Dao<Film> {
                     "GROUP BY SEARCH.FILM_ID\n" +
                     "ORDER BY SEARCH.FILM_RATE DESC, COUNT(L.FILM_ID) DESC";
 
-    String SORTED_FILMS =
-            "SELECT F.FILM_ID,\n" +
-                    "       FILM_NAME,\n" +
-                    "       FILM_DESCRIPTION,\n" +
-                    "       RELEASE_DATE,\n" +
-                    "       DURATION,\n" +
-                    "       F.RATING_ID,\n" +
-                    "       RATING_NAME,\n" +
-                    "       FILM_RATE\n" +
-                    "FROM FILMS F\n" +
-                    "LEFT JOIN RATINGS R on R.RATING_ID = F.RATING_ID\n" +
-                    "LEFT JOIN LIKES L on F.FILM_ID = L.FILM_ID\n" +
-                    "GROUP BY F.FILM_ID\n" +
-                    "ORDER BY FILM_RATE DESC, COUNT(L.FILM_ID) DESC\n";
-
     String UNION = "\nUNION\n";
     String DIRECTOR = "director";
     String TITLE = "title";
@@ -237,8 +222,6 @@ public interface FilmDao extends Dao<Film> {
     Collection<Film> getTheMostPopularFilmsWithFilter(int count, Optional<Integer> genreId, Optional<Integer> year);
 
     Collection<Film> search(String query, List<String> searchFilters);
-
-    Collection<Film> getSortedFilms();
 
     Map<User, Map<Film, Double>> getRateData();
 }

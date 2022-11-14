@@ -11,9 +11,9 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Jacksonized
 public class GenreDto {
-    @Schema(type = "integer", example = "1")
+    @Schema(type = "integer", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     int id;
     @NotNull
-    @Schema(type = "string", example = "Комедия")
+    @Schema(type = "string", example = "Комедия", accessMode = Schema.AccessMode.READ_ONLY)
     String name;
 }

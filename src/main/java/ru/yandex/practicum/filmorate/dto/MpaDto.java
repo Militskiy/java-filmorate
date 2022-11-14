@@ -11,9 +11,9 @@ import javax.validation.constraints.NotNull;
 @Builder
 @Jacksonized
 public class MpaDto {
-    @Schema(type = "integer", example = "1")
+    @Schema(type = "integer", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     int id;
     @NotNull
-    @Schema(type = "string", example = "G")
+    @Schema(type = "string", example = "G", accessMode = Schema.AccessMode.READ_ONLY)
     String name;
 }

@@ -93,8 +93,4 @@ public class FilmService {
                 throw new BadArgumentsException("Bad search filter parameters, too much filters.");
         }
     }
-
-    public Collection<Film> getSortedFilms() {
-        return filmStorage.getSortedFilms();
-    }
 }
